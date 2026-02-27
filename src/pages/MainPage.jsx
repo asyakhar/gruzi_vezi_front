@@ -1,5 +1,6 @@
 import React from "react";
 import "./MainPage.css";
+import { Link } from "react-router-dom";
 
 const MainPage = () => {
   return (
@@ -87,14 +88,11 @@ const MainPage = () => {
 
               {/* Карточка 3 - Справочники */}
               <div className="feature-card">
-                <h3 className="feature-title">Справочники</h3>
+                <h3 className="feature-title">Оформление заявки</h3>
                 <p className="feature-description">
-                  Воспользуйтесь актуальными справочниками для организации
-                  железнодорожных грузоперевозок.
+                  Воспользуйтесь удобным инструментом для оформления заявки.
                 </p>
-                <a href="#" className="feature-link">
-                  Перейти →
-                </a>
+                <Link to="/create-order" className="feature-link">Перейти →</Link>
               </div>
 
               {/* Карточка 4 - О кабинете */}
