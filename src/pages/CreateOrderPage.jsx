@@ -148,11 +148,11 @@ const CreateOrderPage = () => {
                             <label>Род вагонов *</label>
                             {/* Значения value должны совпадать с твоим WagonType.java */}
                             <select name="requestedWagonType" value={formData.requestedWagonType} onChange={handleChange} className="form-input" required>
-                                <option value="COVERED">Крытый вагон</option>
-                                <option value="OPEN_TOP">Полувагон</option>
-                                <option value="TANK_CAR">Цистерна</option>
-                                <option value="FLATCAR">Платформа</option>
-                                <option value="HOPPER">Рефрижератор</option>
+                                <option value="крытый">Крытый вагон</option>
+                                <option value="полувагон">Полувагон</option>
+                                <option value="цистерна">Цистерна</option>
+                                <option value="платформа">Платформа</option>
+                                <option value="рефрижератор">Рефрижератор</option>
                             </select>
                         </div>
                     </div>

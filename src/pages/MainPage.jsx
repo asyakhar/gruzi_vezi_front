@@ -1,8 +1,47 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import "./MainPage.css";
-import { Link } from "react-router-dom";
 
 const MainPage = () => {
+  const navigate = useNavigate();
+
+  // 1. Создаем состояние: залогинен ли пользователь (по умолчанию false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 2. Проверяем наличие токена при загрузке страницы
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // 3. Функция для выхода из аккаунта
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    // Если на бэкенде работает эндпоинт логаута (для очистки Redis) - вызываем его
+    if (refreshToken) {
+      try {
+        await fetch("http://localhost:8080/api/auth/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken })
+        });
+      } catch (e) {
+        console.error("Ошибка при логауте на сервере", e);
+      }
+    }
+
+    // В любом случае удаляем токены из памяти браузера
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+
+    // Меняем состояние, чтобы шапка сайта обновилась
+    setIsLoggedIn(false);
+    alert("Вы успешно вышли из аккаунта");
+  };
+
   return (
     <div className="main-page">
       {/* Шапка сайта */}
@@ -31,8 +70,22 @@ const MainPage = () => {
             </ul>
           </nav>
           <div className="header-actions">
-            <button className="btn btn-outline">Войти</button>
-            <button className="btn btn-primary">Регистрация</button>
+            {isLoggedIn ? (
+              // Если пользователь залогинен, показываем только эту кнопку
+              <button className="btn btn-outline" onClick={handleLogout}>
+                Выйти
+              </button>
+            ) : (
+              // Если НЕ залогинен, показываем эти две
+              <>
+                <button className="btn btn-outline" onClick={() => navigate("/login")}>
+                  Войти
+                </button>
+                <button className="btn btn-primary" onClick={() => navigate("/register")}>
+                  Регистрация
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
