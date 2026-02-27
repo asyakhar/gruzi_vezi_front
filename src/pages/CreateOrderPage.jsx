@@ -9,7 +9,7 @@ const CreateOrderPage = () => {
     const [formData, setFormData] = useState({
         departureStation: "",
         destinationStation: "",
-        requestedWagonType: "COVERED", // Значение по умолчанию
+        requestedWagonType: "крытый", // Значение по умолчанию
         cargoType: "STANDARD",
         weightKg: "",
         volumeM3: "",
@@ -59,9 +59,27 @@ const CreateOrderPage = () => {
 
             if (!response.ok) {
                 if (response.status === 403 || response.status === 401) {
-                    throw new Error("Необходимо авторизоваться!");
+                    throw new Error("Сессия истекла. Пожалуйста, авторизуйтесь заново.");
                 }
-                throw new Error("Ошибка при создании заявки. Проверьте данные.");
+
+                // Пытаемся прочитать подробности ошибки от бэкенда
+                const errorData = await response.json().catch(() => null);
+
+                if (errorData) {
+                    // Если это наша ErrorResponse (с полем message)
+                    if (errorData.message) {
+                        throw new Error(errorData.message);
+                    }
+                    // Если это ошибки валидации полей (Map<String, String>)
+                    else {
+                        // Собираем все ошибки полей в одну красивую строку
+                        const fieldErrors = Object.entries(errorData)
+                            .map(([field, msg]) => `• ${msg}`)
+                            .join("\n");
+                        throw new Error(`Пожалуйста, исправьте ошибки:\n${fieldErrors}`);
+                    }
+                }
+                throw new Error("Произошла неизвестная ошибка при создании заявки.");
             }
 
             const data = await response.json();
