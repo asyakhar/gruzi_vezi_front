@@ -8,6 +8,7 @@ import CreateOrderPage from "./pages/CreateOrderPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import PaymentPage from "./pages/PaymentPage";
+import CargoCalculatorPage from "./pages/CargoCalculatorPage";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/create-order" element={<CreateOrderPage />} />
           <Route path="/payment/create" element={<PaymentPage />} />
           <Route path="/login" element={<LoginPage />} />{" "}
+          <Route path="/calculator" element={<CargoCalculatorPage />} />
           {/* <-- Роут логина */}
           <Route path="/register" element={<RegisterPage />} />
         </Routes>

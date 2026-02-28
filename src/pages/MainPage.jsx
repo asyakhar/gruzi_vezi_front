@@ -131,9 +131,9 @@ const MainPage = () => {
                 <p className="feature-description">
                   Рассчитайте предварительную стоимость перевозки вашего груза.
                 </p>
-                <a href="#" className="feature-link">
+                <Link to="/calculator" className="feature-link">
                   Рассчитать →
-                </a>
+                </Link>
               </div>
 
               {/* Карточка 2 - Интерактивная карта */}
