@@ -5,7 +5,7 @@ import "./MainPage.css"; // Импортируем стили из MainPage
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-
+  const [copied, setCopied] = React.useState(false);
   const orderId = searchParams.get("orderId");
   const wagonId = searchParams.get("wagonId");
 
@@ -29,7 +29,15 @@ const PaymentPage = () => {
     const { name, value } = e.target;
     setPaymentData({ ...paymentData, [name]: value });
   };
-
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(createdPayment.payment_document);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Ошибка:", err);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -82,7 +90,7 @@ const PaymentPage = () => {
 
       const data = await response.json();
       setCreatedPayment(data);
-      setMessage(`Платеж создан! Номер документа: ${data.payment_document}`);
+      setMessage(`Платеж успешно создан!`);
     } catch (err) {
       console.error("Полная ошибка:", err);
       setError(err.message);
@@ -151,12 +159,24 @@ const PaymentPage = () => {
             Платежные реквизиты
           </h2>
 
-          {message && (
+          {/* {message && (
             <div className="message success" style={{ marginBottom: "20px" }}>
               {message}
             </div>
+          )} */}
+          {message && ( // ДОБАВЬТЕ ЭТОТ БЛОК
+            <div
+              style={{
+                padding: "15px",
+                background: "#d4edda",
+                color: "#155724",
+                marginBottom: "20px",
+                borderRadius: "5px",
+              }}
+            >
+              {message}
+            </div>
           )}
-
           {error && (
             <div className="message error" style={{ marginBottom: "20px" }}>
               ❌ {error}
@@ -304,13 +324,18 @@ const PaymentPage = () => {
             </form>
           ) : (
             <div className="success-container" style={{ textAlign: "center" }}>
-              <div
-                className="message success"
-                style={{ fontSize: "1.2rem", padding: "20px" }}
+              {/* <div
+                style={{
+                  padding: "15px",
+                  background: "#d4edda",
+                  color: "#155724",
+                  marginBottom: "20px",
+                  borderRadius: "5px",
+                  fontSize: "1.2rem",
+                }}
               >
                 ✅ Платеж создан успешно!
-              </div>
-
+              </div> */}
               <div
                 className="info-card"
                 style={{
@@ -323,8 +348,13 @@ const PaymentPage = () => {
                 <p style={{ fontSize: "1.1rem", marginBottom: "15px" }}>
                   <strong>Номер документа:</strong>
                 </p>
-                <p
+
+                <div
                   style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center", // Текст по центру
+                    position: "relative", // Чтобы кнопка не "убегала"
                     fontSize: "1.5rem",
                     fontWeight: "bold",
                     color: "#e31e24",
@@ -335,11 +365,64 @@ const PaymentPage = () => {
                     border: "2px dashed #e31e24",
                   }}
                 >
-                  {createdPayment.payment_document}
-                </p>
-                <p style={{ marginTop: "15px" }}>
-                  <strong>Статус:</strong> {createdPayment.status}
-                </p>
+                  {/* Сам текст */}
+                  <span>{createdPayment.payment_document}</span>
+
+                  {/* Кнопка-иконка справа */}
+                  <button
+                    onClick={handleCopy}
+                    title="Скопировать"
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      color: copied ? "#28a745" : "#e31e24", // Зеленеет при успехе
+                      transition: "color 0.2s",
+                    }}
+                  >
+                    {copied ? (
+                      // Иконка галочки
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    ) : (
+                      // Иконка копирования
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect
+                          x="9"
+                          y="9"
+                          width="13"
+                          height="13"
+                          rx="2"
+                          ry="2"
+                        ></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div

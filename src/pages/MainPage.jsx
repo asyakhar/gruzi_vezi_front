@@ -26,7 +26,7 @@ const MainPage = () => {
         await fetch("http://localhost:8080/api/auth/logout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refreshToken })
+          body: JSON.stringify({ refreshToken }),
         });
       } catch (e) {
         console.error("Ошибка при логауте на сервере", e);
@@ -59,7 +59,10 @@ const MainPage = () => {
                 </a>
               </li>
               <li>
-                <a href="#">Компания</a>
+                <Link to="/create-order" className="feature-link">
+                  Оформление заявки
+                </Link>
+                {/* <a href="#">Оформление заявки</a> */}
               </li>
               <li>
                 <a href="#">Пресс-центр</a>
@@ -78,10 +81,16 @@ const MainPage = () => {
             ) : (
               // Если НЕ залогинен, показываем эти две
               <>
-                <button className="btn btn-outline" onClick={() => navigate("/login")}>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => navigate("/login")}
+                >
                   Войти
                 </button>
-                <button className="btn btn-primary" onClick={() => navigate("/register")}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate("/register")}
+                >
                   Регистрация
                 </button>
               </>
@@ -145,7 +154,9 @@ const MainPage = () => {
                 <p className="feature-description">
                   Воспользуйтесь удобным инструментом для оформления заявки.
                 </p>
-                <Link to="/create-order" className="feature-link">Перейти →</Link>
+                <Link to="/create-order" className="feature-link">
+                  Перейти →
+                </Link>
               </div>
 
               {/* Карточка 4 - О кабинете */}
