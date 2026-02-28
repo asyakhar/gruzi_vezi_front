@@ -59,8 +59,21 @@ const CreateOrderPage = () => {
                 body: JSON.stringify(payload),
             });
 
-            // Наша умная обработка ошибок (остается без изменений)
+            // const token = localStorage.getItem("accessToken");
+
+            // const response = await fetch("http://localhost:8080/api/orders", {
+            //     method: "POST",
+            //     headers: {
+            //         "Content-Type": "application/json",
+            //         Authorization: `Bearer ${token}`, // Передаем токен охраннику Spring Security
+            //     },
+            //     body: JSON.stringify(payload),
+            // });
+
             if (!response.ok) {
+                if (response.status === 403 || response.status === 401) {
+                    throw new Error("Сессия истекла. Пожалуйста, авторизуйтесь заново.");
+                }
                 const errorData = await response.json().catch(() => null);
 
                 if (errorData) {
@@ -78,6 +91,7 @@ const CreateOrderPage = () => {
 
             // Если всё хорошо:
             const data = await response.json();
+            console.log("данные отправлены");
             setMessage(`Успешно! Номер вашей заявки: ${data.orderId}`);
 
             // Очищаем форму
@@ -88,6 +102,9 @@ const CreateOrderPage = () => {
 
         } catch (err) {
             setError(err.message);
+        } finally {
+            // Обязательно выключаем загрузку в самом конце!
+            setLoading(false);
         }
     };
 
