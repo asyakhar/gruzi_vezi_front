@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MainPage.css"; // Можешь создать отдельный CSS, но пока возьмем стили отсюда
+import { fetchWithAuth } from "../api"; // Убедись, что путь правильный (зависит от того, где лежит страница)
 
 const CreateOrderPage = () => {
     const navigate = useNavigate();
@@ -45,34 +46,20 @@ const CreateOrderPage = () => {
         };
 
         try {
-            // Достаем токен из памяти браузера (предполагается, что при логине мы его туда сохранили)
-            const token = localStorage.getItem("accessToken");
-
-            const response = await fetch("http://localhost:8080/api/orders", {
+            // ИСПОЛЬЗУЕМ НАШЕГО АГЕНТА! Нам больше не нужно вручную доставать токен здесь.
+            const response = await fetchWithAuth("http://localhost:8080/api/orders", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` // Передаем токен охраннику Spring Security
-                },
                 body: JSON.stringify(payload),
             });
 
+            // Наша умная обработка ошибок (остается без изменений)
             if (!response.ok) {
-                if (response.status === 403 || response.status === 401) {
-                    throw new Error("Сессия истекла. Пожалуйста, авторизуйтесь заново.");
-                }
-
-                // Пытаемся прочитать подробности ошибки от бэкенда
                 const errorData = await response.json().catch(() => null);
 
                 if (errorData) {
-                    // Если это наша ErrorResponse (с полем message)
                     if (errorData.message) {
                         throw new Error(errorData.message);
-                    }
-                    // Если это ошибки валидации полей (Map<String, String>)
-                    else {
-                        // Собираем все ошибки полей в одну красивую строку
+                    } else {
                         const fieldErrors = Object.entries(errorData)
                             .map(([field, msg]) => `• ${msg}`)
                             .join("\n");
@@ -82,12 +69,13 @@ const CreateOrderPage = () => {
                 throw new Error("Произошла неизвестная ошибка при создании заявки.");
             }
 
+            // Если всё хорошо:
             const data = await response.json();
             setMessage(`Успешно! Номер вашей заявки: ${data.orderId}`);
 
-            // Очищаем форму после успеха
+            // Очищаем форму
             setFormData({
-                departureStation: "", destinationStation: "", requestedWagonType: "COVERED",
+                departureStation: "", destinationStation: "", requestedWagonType: "крытый",
                 cargoType: "STANDARD", weightKg: "", volumeM3: "", packagingType: "CONTAINER"
             });
 
