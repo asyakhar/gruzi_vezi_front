@@ -101,17 +101,19 @@ const PaymentPage = () => {
         }
       );
 
-      const text = await response.text();
-
-      // Создаем файл для скачивания
-      const blob = new Blob([text], { type: "text/plain" });
+      // ВАЖНО: получаем данные как blob, а не text
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `payment_${createdPayment.payment_document}.txt`;
+      // Меняем расширение на .pdf
+      a.download = `invoice_${createdPayment.paymentDocument || 'rzd'}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      a.remove();
     } catch (err) {
-      setError("Ошибка при скачивании");
+      console.error(err);
+      setError("Ошибка при скачивании PDF");
     }
   };
 
