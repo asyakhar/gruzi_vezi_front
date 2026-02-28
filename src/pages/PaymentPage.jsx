@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import "./MainPage.css"; // Импортируем стили из MainPage
 
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
@@ -47,14 +48,14 @@ const PaymentPage = () => {
       }
 
       const payload = {
-        orderId: orderId, // Это должно быть строкой вида "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33"
+        orderId: orderId,
         amount: 150000.0,
         companyName: paymentData.companyName,
         inn: paymentData.inn,
         kpp: paymentData.kpp || null,
         bik: paymentData.bik,
         accountNumber: paymentData.accountNumber,
-        correspondentAccount: paymentData.correspondentAccount || "", // Пустая строка если не ввели
+        correspondentAccount: paymentData.correspondentAccount || "",
         bankName: paymentData.bankName,
         paymentPurpose: paymentData.paymentPurpose,
       };
@@ -114,162 +115,252 @@ const PaymentPage = () => {
     }
   };
 
+  // Добавляем проверку авторизации при загрузке
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      setError("Требуется авторизация. Перенаправление...");
+      setTimeout(() => navigate("/login"), 2000);
+    }
+  }, [navigate]);
+
   return (
     <div className="main-page">
       <header className="header">
         <div className="container header-container">
           <div className="logo" onClick={() => navigate("/")}>
-            <span className="logo-text">ОАО «РЖД» | Оплата</span>
+            <span className="logo-text">🚂 ОАО «РЖД» | Оплата перевозки</span>
           </div>
+          <button className="btn btn-outline" onClick={() => navigate("/")}>
+            На главную
+          </button>
         </div>
       </header>
 
-      <main
-        className="container"
-        style={{ maxWidth: "800px", padding: "40px 0" }}
-      >
-        {message && (
-          <div
-            style={{
-              padding: "15px",
-              background: "#d4edda",
-              color: "#155724",
-              marginBottom: "20px",
-              borderRadius: "5px",
-            }}
+      <main className="container" style={{ padding: "40px 0" }}>
+        <div
+          className="content-card"
+          style={{ maxWidth: "800px", margin: "0 auto" }}
+        >
+          <h2
+            className="section-title"
+            style={{ textAlign: "center", marginBottom: "30px" }}
           >
-            {message}
-          </div>
-        )}
+            Платежные реквизиты
+          </h2>
 
-        {error && (
-          <div
-            style={{
-              padding: "15px",
-              background: "#f8d7da",
-              color: "#721c24",
-              marginBottom: "20px",
-              borderRadius: "5px",
-            }}
-          >
-            ❌ {error}
-          </div>
-        )}
-
-        {!createdPayment ? (
-          <form onSubmit={handleSubmit}>
-            <h2>Платежные реквизиты</h2>
-
-            <div style={{ marginBottom: "15px" }}>
-              <label>Название компании *</label>
-              <input
-                type="text"
-                name="companyName"
-                value={paymentData.companyName}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
+          {message && (
+            <div className="message success" style={{ marginBottom: "20px" }}>
+              {message}
             </div>
+          )}
 
-            <div style={{ display: "flex", gap: "20px", marginBottom: "15px" }}>
-              <div style={{ flex: 1 }}>
-                <label>ИНН *</label>
+          {error && (
+            <div className="message error" style={{ marginBottom: "20px" }}>
+              ❌ {error}
+            </div>
+          )}
+
+          {!createdPayment ? (
+            <form onSubmit={handleSubmit} className="form-container">
+              <div className="form-group">
+                <label className="form-label">
+                  Название компании <span className="required">*</span>
+                </label>
                 <input
                   type="text"
-                  name="inn"
-                  value={paymentData.inn}
+                  name="companyName"
+                  value={paymentData.companyName}
                   onChange={handleChange}
-                  pattern="\d{10}|\d{12}"
+                  className="form-input"
+                  placeholder="ООО Ромашка"
                   required
                 />
               </div>
-              <div style={{ flex: 1 }}>
-                <label>КПП</label>
-                <input
-                  type="text"
-                  name="kpp"
-                  value={paymentData.kpp}
-                  onChange={handleChange}
-                  pattern="\d{9}"
-                />
-              </div>
-            </div>
 
-            <div style={{ display: "flex", gap: "20px", marginBottom: "15px" }}>
-              <div style={{ flex: 1 }}>
-                <label>БИК *</label>
-                <input
-                  type="text"
-                  name="bik"
-                  value={paymentData.bik}
-                  onChange={handleChange}
-                  pattern="\d{9}"
-                  required
-                />
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">
+                    ИНН <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="inn"
+                    value={paymentData.inn}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="7701234567"
+                    pattern="\d{10}|\d{12}"
+                    title="ИНН должен содержать 10 или 12 цифр"
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">КПП</label>
+                  <input
+                    type="text"
+                    name="kpp"
+                    value={paymentData.kpp}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="770101001"
+                    pattern="\d{9}"
+                    title="КПП должен содержать 9 цифр"
+                  />
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <label>Расчетный счет *</label>
+
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">
+                    БИК <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="bik"
+                    value={paymentData.bik}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="044525225"
+                    pattern="\d{9}"
+                    title="БИК должен содержать 9 цифр"
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label className="form-label">
+                    Расчетный счет <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="accountNumber"
+                    value={paymentData.accountNumber}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="40702810123450123456"
+                    pattern="\d{20}"
+                    title="Расчетный счет должен содержать 20 цифр"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Корреспондентский счет</label>
                 <input
                   type="text"
-                  name="accountNumber"
-                  value={paymentData.accountNumber}
+                  name="correspondentAccount"
+                  value={paymentData.correspondentAccount}
                   onChange={handleChange}
+                  className="form-input"
+                  placeholder="30101810400000000225"
                   pattern="\d{20}"
+                  title="Корр. счет должен содержать 20 цифр"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  Название банка <span className="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="bankName"
+                  value={paymentData.bankName}
+                  onChange={handleChange}
+                  className="form-input"
+                  placeholder="ПАО СБЕРБАНК"
                   required
                 />
               </div>
-            </div>
 
-            <div style={{ marginBottom: "15px" }}>
-              <label>Название банка *</label>
-              <input
-                type="text"
-                name="bankName"
-                value={paymentData.bankName}
-                onChange={handleChange}
-                required
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">
+                  Назначение платежа <span className="required">*</span>
+                </label>
+                <textarea
+                  name="paymentPurpose"
+                  value={paymentData.paymentPurpose}
+                  onChange={handleChange}
+                  className="form-input"
+                  rows="3"
+                  placeholder="Оплата грузовой перевозки по договору №РЖД-2026-123"
+                  required
+                />
+              </div>
 
-            <div style={{ marginBottom: "15px" }}>
-              <label>Назначение платежа *</label>
-              <textarea
-                name="paymentPurpose"
-                value={paymentData.paymentPurpose}
-                onChange={handleChange}
-                rows="2"
-                required
-              />
-            </div>
+              <div className="form-actions">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={loading}
+                  style={{ fontSize: "1.1rem", padding: "12px 30px" }}
+                >
+                  {loading ? "Создание..." : "Создать платеж"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="success-container" style={{ textAlign: "center" }}>
+              <div
+                className="message success"
+                style={{ fontSize: "1.2rem", padding: "20px" }}
+              >
+                ✅ Платеж создан успешно!
+              </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading}
-            >
-              {loading ? "Создание..." : "Создать платеж"}
-            </button>
-          </form>
-        ) : (
-          <div>
-            <h3>Платеж создан успешно!</h3>
-            <p>
-              Номер документа:{" "}
-              <strong>{createdPayment.payment_document}</strong>
-            </p>
-            <p>Статус: {createdPayment.status}</p>
+              <div
+                className="info-card"
+                style={{
+                  background: "#f8f9fa",
+                  padding: "25px",
+                  borderRadius: "10px",
+                  margin: "30px 0",
+                }}
+              >
+                <p style={{ fontSize: "1.1rem", marginBottom: "15px" }}>
+                  <strong>Номер документа:</strong>
+                </p>
+                <p
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: "bold",
+                    color: "#e31e24",
+                    fontFamily: "monospace",
+                    padding: "10px",
+                    background: "white",
+                    borderRadius: "5px",
+                    border: "2px dashed #e31e24",
+                  }}
+                >
+                  {createdPayment.payment_document}
+                </p>
+                <p style={{ marginTop: "15px" }}>
+                  <strong>Статус:</strong> {createdPayment.status}
+                </p>
+              </div>
 
-            <div style={{ display: "flex", gap: "20px", marginTop: "30px" }}>
-              <button onClick={downloadInvoice} className="btn btn-primary">
-                📄 Скачать платежное поручение
-              </button>
-              <button onClick={() => navigate("/")} className="btn btn-outline">
-                На главную
-              </button>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "20px",
+                  justifyContent: "center",
+                  marginTop: "30px",
+                }}
+              >
+                <button onClick={downloadInvoice} className="btn btn-primary">
+                  Скачать платежное поручение
+                </button>
+                <button
+                  onClick={() => navigate("/")}
+                  className="btn btn-outline"
+                >
+                  На главную
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </main>
     </div>
   );
