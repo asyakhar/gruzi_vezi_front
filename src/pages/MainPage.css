@@ -9,10 +9,10 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  /* Предотвращает горизонтальный скролл */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.5;
   color: #333;
+  background: #ffffff !important; 
 }
 
 /* Главный контейнер страницы */
@@ -37,16 +37,18 @@ body {
   }
 }
 
-/* Шапка на всю ширину */
+/* Шапка на всю ширину - закреплена сверху */
 .header {
   background: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
   width: 100%;
   left: 0;
   right: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .header-container {
@@ -81,7 +83,6 @@ body {
   display: flex;
   justify-content: center;
   min-width: 0;
-  /* Позволяет элементу сжиматься */
 }
 
 .main-nav .nav-list {
@@ -146,7 +147,7 @@ body {
   font-size: 1.1rem;
 }
 
-/* Секция с юбилеем на всю ширину */
+/* Секция с юбилеем */
 .anniversary-section {
   background: linear-gradient(135deg, rgba(26, 35, 126, 0.85) 0%, rgba(13, 71, 161, 0.85) 50%),
     url('/images/train-bg.jpg');
@@ -155,8 +156,6 @@ body {
   color: #fff;
   padding: 100px 0;
   width: 100%;
-  left: 0;
-  right: 0;
   position: relative;
 }
 
@@ -215,11 +214,6 @@ body {
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
 }
 
-.feature-icon {
-  font-size: 3rem;
-  margin-bottom: 20px;
-}
-
 .feature-title {
   font-size: 1.5rem;
   margin-bottom: 15px;
@@ -247,13 +241,11 @@ body {
   color: #b71c1c;
 }
 
-/* Форма поиска грузоперевозки на всю ширину */
+/* Форма поиска грузоперевозки */
 .cargo-search-section {
   background: #f5f5f5;
   padding: 60px 0;
   width: 100%;
-  left: 0;
-  right: 0;
 }
 
 .search-form {
@@ -279,30 +271,68 @@ body {
   flex-wrap: wrap;
 }
 
-.form-input {
+/* ОБНОВЛЕНО: Стили для всех полей ввода и select */
+.form-input,
+select.form-input,
+input.form-input,
+textarea.form-input {
   flex: 1 1 200px;
   padding: 15px;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s;
+  transition: all 0.3s;
   min-width: 0;
   width: 100%;
+  background: #ffffff;
+  color: #333333;
+  font-family: inherit;
+}
+
+/* НОВОЕ: Специальные стили для select (выпадающих списков) */
+select.form-input {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 16px;
+  padding-right: 45px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* НОВОЕ: Стили для options внутри select */
+select.form-input option {
+  background: #ffffff;
+  color: #333333;
+  padding: 12px;
+  font-size: 1rem;
+}
+
+select.form-input:focus {
+  outline: none;
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
 }
 
 .form-input:focus {
   outline: none;
   border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
 }
 
-/* Подвал на всю ширину */
+.form-input::placeholder {
+  color: #999999;
+  opacity: 1;
+}
+
+/* Подвал */
 .footer {
   background: #1a237e;
   color: #fff;
   padding: 60px 0 30px;
   width: 100%;
-  left: 0;
-  right: 0;
 }
 
 .footer-content {
@@ -352,7 +382,7 @@ body {
   width: 100%;
 }
 
-/* Медиа-запросы для адаптивности */
+/* Медиа-запросы */
 @media (max-width: 1200px) {
   .features-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -426,7 +456,8 @@ body {
     gap: 15px;
   }
 
-  .form-input {
+  .form-input,
+  select.form-input {
     width: 100%;
   }
 
@@ -460,7 +491,6 @@ body {
   }
 }
 
-/* Для очень маленьких экранов */
 @media (max-width: 480px) {
   .container {
     padding: 0 15px;
@@ -486,109 +516,55 @@ body {
     padding: 20px;
   }
 
-  .form-input {
+  .form-input,
+  select.form-input {
     padding: 12px;
   }
 }
 
-/* Форма поиска грузоперевозки */
-.cargo-search-section {
-  background: #f5f5f5;
-  padding: 60px 0;
-  width: 100%;
-  left: 0;
-  right: 0;
-}
-
-.search-form {
-  background: #fff;
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  width: 100%;
-}
-
-.search-form-title {
-  font-size: 2rem;
-  margin-bottom: 30px;
-  color: #1a237e;
-  text-align: center;
-}
-
-.form-row {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-  width: 100%;
-  flex-wrap: wrap;
-}
-
-.form-input {
-  flex: 1 1 200px;
-  padding: 15px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s;
-  min-width: 0;
-  width: 100%;
-  background: #ffffff;
-  /* Явно задаем белый фон */
-  color: #333333;
-  /* Темный текст для контраста */
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #d32f2f;
-  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
-  /* Легкое свечение при фокусе */
-}
-
-.form-input::placeholder {
-  color: #999999;
-  /* Цвет плейсхолдера */
-  opacity: 1;
-}
-
-/* Стили для кнопки */
-.btn-primary {
-  background: #d32f2f;
-  color: #fff;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.btn-primary:hover {
-  background: #b71c1c;
-}
-
-.btn-large {
-  padding: 15px 30px;
-  font-size: 1.1rem;
-  min-width: 150px;
-}
-
-/* Специальный класс для комично больших инпутов на странице логина */
+/* Специальный класс для комично больших инпутов */
 .login-input {
   font-size: 4rem;
-  /* Огромный размер шрифта (примерно 64px) */
   line-height: 1;
-  /* Высота строки равна размеру шрифта, чтобы не было пустот */
   padding: 5px 15px;
-  /* Уменьшаем отступы сверху и снизу (5px), по бокам оставляем (15px) */
   height: 90px;
-  /* Задаем общую высоту поля */
 }
 
-/* Чтобы плейсхолдер (Email/Пароль) тоже был огромным, но не вылезал за края */
 .login-input::placeholder {
   font-size: 3rem;
   line-height: 1;
   vertical-align: middle;
+}
+/* Фикс для создания заявки */
+.main-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.footer {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+/* Убедимся что контейнер шапки правильно выровнен */
+.header-container {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Для упрощенной шапки - центрируем контент */
+.header-container:has(.header-actions:only-child) {
+  justify-content: space-between;
 }
