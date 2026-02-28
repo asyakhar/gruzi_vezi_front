@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import "./MainPage.css"; // Импортируем стили из MainPage
+import "./MainPage.css";
 
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
@@ -21,14 +21,55 @@ const PaymentPage = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true); // НОВОЕ
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [createdPayment, setCreatedPayment] = useState(null);
+
+  // ЗАГРУЗКА ПРОФИЛЯ ПРИ МОНТИРОВАНИИ
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          setError("Требуется авторизация");
+          setTimeout(() => navigate("/login"), 2000);
+          return;
+        }
+
+        // Загружаем профиль пользователя
+        const response = await fetch("http://localhost:8080/api/user/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          throw new Error("Ошибка загрузки профиля");
+        }
+
+        const userData = await response.json();
+
+        // Заполняем данные из БД
+        setPaymentData((prev) => ({
+          ...prev,
+          companyName: userData.companyName,
+          inn: userData.inn,
+        }));
+      } catch (err) {
+        console.error("Ошибка загрузки профиля:", err);
+        setError("Не удалось загрузить данные компании");
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPaymentData({ ...paymentData, [name]: value });
   };
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(createdPayment.payment_document);
@@ -38,6 +79,7 @@ const PaymentPage = () => {
       console.error("Ошибка:", err);
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -46,11 +88,8 @@ const PaymentPage = () => {
     try {
       const token = localStorage.getItem("accessToken");
 
-      // Логируем что отправляем
       console.log("orderId из URL:", orderId);
-      console.log("Тип orderId:", typeof orderId);
 
-      // Проверяем что orderId есть
       if (!orderId) {
         throw new Error("Не указан ID заказа в URL");
       }
@@ -109,13 +148,11 @@ const PaymentPage = () => {
         }
       );
 
-      // ВАЖНО: получаем данные как blob, а не text
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      // Меняем расширение на .pdf
-      a.download = `invoice_${createdPayment.paymentDocument || 'rzd'}.pdf`;
+      a.download = `invoice_${createdPayment.paymentDocument || "rzd"}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -125,14 +162,18 @@ const PaymentPage = () => {
     }
   };
 
-  // Добавляем проверку авторизации при загрузке
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      setError("Требуется авторизация. Перенаправление...");
-      setTimeout(() => navigate("/login"), 2000);
-    }
-  }, [navigate]);
+  if (profileLoading) {
+    return (
+      <div className="main-page">
+        <div
+          className="container"
+          style={{ textAlign: "center", padding: "50px" }}
+        >
+          <div>Загрузка данных компании...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="main-page">
@@ -159,12 +200,7 @@ const PaymentPage = () => {
             Платежные реквизиты
           </h2>
 
-          {/* {message && (
-            <div className="message success" style={{ marginBottom: "20px" }}>
-              {message}
-            </div>
-          )} */}
-          {message && ( // ДОБАВЬТЕ ЭТОТ БЛОК
+          {message && (
             <div
               style={{
                 padding: "15px",
@@ -185,21 +221,26 @@ const PaymentPage = () => {
 
           {!createdPayment ? (
             <form onSubmit={handleSubmit} className="form-container">
+              {/* НАЗВАНИЕ КОМПАНИИ ИЗ БД - ТОЛЬКО ЧТЕНИЕ */}
               <div className="form-group">
                 <label className="form-label">
                   Название компании <span className="required">*</span>
                 </label>
                 <input
                   type="text"
-                  name="companyName"
                   value={paymentData.companyName}
-                  onChange={handleChange}
                   className="form-input"
-                  placeholder="ООО Ромашка"
-                  required
+                  readOnly
+                  style={{
+                    background: "#f0f0f0",
+                    cursor: "not-allowed",
+                    fontWeight: "bold",
+                  }}
                 />
+                <small style={{ color: "#666" }}>Данные из профиля</small>
               </div>
 
+              {/* ИНН ИЗ БД - ТОЛЬКО ЧТЕНИЕ */}
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">
@@ -207,15 +248,16 @@ const PaymentPage = () => {
                   </label>
                   <input
                     type="text"
-                    name="inn"
                     value={paymentData.inn}
-                    onChange={handleChange}
                     className="form-input"
-                    placeholder="7701234567"
-                    pattern="\d{10}|\d{12}"
-                    title="ИНН должен содержать 10 или 12 цифр"
-                    required
+                    readOnly
+                    style={{
+                      background: "#f0f0f0",
+                      cursor: "not-allowed",
+                      fontWeight: "bold",
+                    }}
                   />
+                  <small style={{ color: "#666" }}>Данные из профиля</small>
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">КПП</label>
@@ -225,13 +267,14 @@ const PaymentPage = () => {
                     value={paymentData.kpp}
                     onChange={handleChange}
                     className="form-input"
-                    placeholder="770101001"
+                    placeholder="9 цифр (для юрлиц)"
                     pattern="\d{9}"
-                    title="КПП должен содержать 9 цифр"
+                    title="Введите 9 цифр"
                   />
                 </div>
               </div>
 
+              {/* ОСТАЛЬНЫЕ ПОЛЯ БЕЗ ИЗМЕНЕНИЙ */}
               <div className="form-row">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">
@@ -243,9 +286,9 @@ const PaymentPage = () => {
                     value={paymentData.bik}
                     onChange={handleChange}
                     className="form-input"
-                    placeholder="044525225"
+                    placeholder="9 цифр"
                     pattern="\d{9}"
-                    title="БИК должен содержать 9 цифр"
+                    title="Введите 9 цифр"
                     required
                   />
                 </div>
@@ -259,9 +302,9 @@ const PaymentPage = () => {
                     value={paymentData.accountNumber}
                     onChange={handleChange}
                     className="form-input"
-                    placeholder="40702810123450123456"
+                    placeholder="20 цифр"
                     pattern="\d{20}"
-                    title="Расчетный счет должен содержать 20 цифр"
+                    title="Введите 20 цифр"
                     required
                   />
                 </div>
@@ -275,9 +318,9 @@ const PaymentPage = () => {
                   value={paymentData.correspondentAccount}
                   onChange={handleChange}
                   className="form-input"
-                  placeholder="30101810400000000225"
+                  placeholder="20 цифр (если есть)"
                   pattern="\d{20}"
-                  title="Корр. счет должен содержать 20 цифр"
+                  title="Введите 20 цифр"
                 />
               </div>
 
@@ -291,7 +334,7 @@ const PaymentPage = () => {
                   value={paymentData.bankName}
                   onChange={handleChange}
                   className="form-input"
-                  placeholder="ПАО СБЕРБАНК"
+                  placeholder="Введите название банка"
                   required
                 />
               </div>
@@ -306,7 +349,7 @@ const PaymentPage = () => {
                   onChange={handleChange}
                   className="form-input"
                   rows="3"
-                  placeholder="Оплата грузовой перевозки по договору №РЖД-2026-123"
+                  placeholder="Опишите назначение платежа"
                   required
                 />
               </div>
@@ -324,18 +367,6 @@ const PaymentPage = () => {
             </form>
           ) : (
             <div className="success-container" style={{ textAlign: "center" }}>
-              {/* <div
-                style={{
-                  padding: "15px",
-                  background: "#d4edda",
-                  color: "#155724",
-                  marginBottom: "20px",
-                  borderRadius: "5px",
-                  fontSize: "1.2rem",
-                }}
-              >
-                ✅ Платеж создан успешно!
-              </div> */}
               <div
                 className="info-card"
                 style={{
@@ -353,8 +384,8 @@ const PaymentPage = () => {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center", // Текст по центру
-                    position: "relative", // Чтобы кнопка не "убегала"
+                    justifyContent: "center",
+                    position: "relative",
                     fontSize: "1.5rem",
                     fontWeight: "bold",
                     color: "#e31e24",
@@ -365,10 +396,8 @@ const PaymentPage = () => {
                     border: "2px dashed #e31e24",
                   }}
                 >
-                  {/* Сам текст */}
                   <span>{createdPayment.payment_document}</span>
 
-                  {/* Кнопка-иконка справа */}
                   <button
                     onClick={handleCopy}
                     title="Скопировать"
@@ -380,12 +409,11 @@ const PaymentPage = () => {
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
-                      color: copied ? "#28a745" : "#e31e24", // Зеленеет при успехе
+                      color: copied ? "#28a745" : "#e31e24",
                       transition: "color 0.2s",
                     }}
                   >
                     {copied ? (
-                      // Иконка галочки
                       <svg
                         width="24"
                         height="24"
@@ -399,7 +427,6 @@ const PaymentPage = () => {
                         <polyline points="20 6 9 17 4 12"></polyline>
                       </svg>
                     ) : (
-                      // Иконка копирования
                       <svg
                         width="24"
                         height="24"
