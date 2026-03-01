@@ -69,7 +69,18 @@ const CreateOrderPage = () => {
       //     body: JSON.stringify(payload),
       //   });
 
-      if (!response.ok) throw new Error("Ошибка при создании заявки");
+      if (!response.ok) {
+        // Пытаемся прочитать JSON с ошибкой от бэкенда
+        const errorData = await response.json().catch(() => null);
+
+        // Если бэкенд прислал поле message (наш валидатор!), показываем его
+        if (errorData && errorData.message) {
+          throw new Error(errorData.message);
+        }
+
+        // Если что-то совсем сломалось
+        throw new Error("Ошибка при создании заявки");
+      }
 
       const data = await response.json();
 
@@ -434,9 +445,8 @@ const CreateOrderPage = () => {
             {wagons.map((wagon) => (
               <div
                 key={wagon.wagonId}
-                className={`wagon-card ${
-                  selectedWagon?.wagonId === wagon.wagonId ? "recommended" : ""
-                }`}
+                className={`wagon-card ${selectedWagon?.wagonId === wagon.wagonId ? "recommended" : ""
+                  }`}
               >
                 <div className="wagon-header">
                   <span className="wagon-type">
