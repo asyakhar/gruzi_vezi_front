@@ -93,10 +93,14 @@ const MainPage = () => {
                 {/* <a href="#">Оформление заявки</a> */}
               </li>
               <li>
-                <a href="#">Пресс-центр</a>
+                <Link to="/calculator" className="feature-link">
+                  Калькулятор
+                </Link>
               </li>
               <li>
-                <a href="#">Контакты</a>
+                <Link to="/profile" className="feature-link">
+                  Личный кабинет
+                </Link>
               </li>
             </ul>
           </nav>
@@ -183,7 +187,11 @@ const MainPage = () => {
                   Воспользуйтесь удобным инструментом для оформления заявки.
                 </p>
                 {/* Меняем ссылку на кнопку/ссылку с нашим перехватчиком onClick */}
-                <a onClick={handleOrderClick} className="feature-link" style={{ cursor: "pointer" }}>
+                <a
+                  onClick={handleOrderClick}
+                  className="feature-link"
+                  style={{ cursor: "pointer" }}
+                >
                   Перейти →
                 </a>
               </div>
@@ -194,7 +202,11 @@ const MainPage = () => {
                 <p className="feature-description">
                   Ознакомьтесь с текущими заявками и профилем в личном кабинете.
                 </p>
-                <a onClick={handleProfileClick} className="feature-link" style={{ cursor: "pointer" }}>
+                <a
+                  onClick={handleProfileClick}
+                  className="feature-link"
+                  style={{ cursor: "pointer" }}
+                >
                   Перейти в кабинет →
                 </a>
               </div>

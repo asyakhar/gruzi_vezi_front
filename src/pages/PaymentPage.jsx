@@ -179,7 +179,8 @@ const PaymentPage = () => {
       <header className="header">
         <div className="container header-container">
           <div className="logo" onClick={() => navigate("/")}>
-            <span className="logo-text">🚂 ОАО «РЖД» | Оплата перевозки</span>
+            <img src="/logo.png" alt="РЖД Логотип" />
+            <span className="logo-text">ОАО «РЖД» | Оплата перевозки</span>
           </div>
           <button className="btn btn-outline" onClick={() => navigate("/")}>
             На главную

@@ -570,3 +570,104 @@ select.form-input:focus {
 .header-container:has(.header-actions:only-child) {
   justify-content: space-between;
 }
+/* Минимальные стили для фильтра */
+.filter-select {
+  padding: 8px 32px 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+.filter-select:hover {
+  border-color: #e21a1a;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #e21a1a;
+  box-shadow: 0 0 0 3px rgba(226, 26, 26, 0.1);
+}
+
+/* Статистика фильтра */
+.filter-stats {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-stat-item {
+  padding: 6px 12px;
+  background: #f8f9fa;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.filter-stat-item:hover {
+  background: #e9ecef;
+}
+
+.filter-stat-item.active {
+  background: #e21a1a;
+  color: white;
+  border-color: #e21a1a;
+}
+
+.filter-stat-item.active .filter-stat-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.filter-stat-count {
+  background: #dee2e6;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+/* Кнопка сброса фильтра */
+.clear-filter-btn {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  color: #6c757d;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.clear-filter-btn:hover {
+  background: #f8f9fa;
+  border-color: #e21a1a;
+  color: #e21a1a;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .filter-select {
+    width: 100%;
+  }
+  
+  .filter-stats {
+    gap: 8px;
+  }
+  
+  .filter-stat-item {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+}
