@@ -69,14 +69,17 @@ const CreateOrderPage = () => {
       //     body: JSON.stringify(payload),
       //   });
 
-      if (!response.ok) throw new Error("Ошибка при создании заявки");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        if (errorData && errorData.message) {
+          throw new Error(errorData.message);
+        }
+        throw new Error("Ошибка при создании заявки");
+      }
 
       const data = await response.json();
-
-      // ЛОГИРУЕМ ЧТО ПРИШЛО С СЕРВЕРА
       console.log("Ответ от сервера:", data);
 
-      // ИСПРАВЛЕНО: проверяем разные возможные имена поля
       let newOrderId = null;
 
       if (data.id) {
@@ -150,8 +153,6 @@ const CreateOrderPage = () => {
       setCalculating(false);
     }
   };
-
-  // ШАГ 3: Расчет полной стоимости для выбранного вагона
   const calculateFullPrice = async (wagonId) => {
     setCalculating(true);
     try {
@@ -182,6 +183,7 @@ const CreateOrderPage = () => {
     }
   };
 
+<<<<<<< HEAD
   // ШАГ 4: Резервирование вагона
   //   const reserveWagon = async (wagonId) => {
   //     setLoading(true);
@@ -213,6 +215,8 @@ const CreateOrderPage = () => {
   //       setLoading(false);
   //     }
   //   };
+=======
+>>>>>>> 675a3980a8a15e78e399d0de2b90c0643b15eee3
   const reserveWagon = async (wagonId) => {
     setLoading(true);
     try {
@@ -479,9 +483,8 @@ const CreateOrderPage = () => {
             {wagons.map((wagon) => (
               <div
                 key={wagon.wagonId}
-                className={`wagon-card ${
-                  selectedWagon?.wagonId === wagon.wagonId ? "recommended" : ""
-                }`}
+                className={`wagon-card ${selectedWagon?.wagonId === wagon.wagonId ? "recommended" : ""
+                  }`}
               >
                 <div className="wagon-header">
                   <span className="wagon-type">

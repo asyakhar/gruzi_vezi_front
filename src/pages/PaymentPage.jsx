@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./MainPage.css";
+import { fetchWithAuth } from "../api";
 
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
@@ -86,17 +87,7 @@ const PaymentPage = () => {
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          setError("Требуется авторизация");
-          setTimeout(() => navigate("/login"), 2000);
-          return;
-        }
-
-        // Загружаем профиль пользователя
-        const response = await fetch("http://localhost:8080/api/user/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await fetchWithAuth("http://localhost:8080/api/user/profile");
 
         if (!response.ok) {
           throw new Error("Ошибка загрузки профиля");
@@ -104,7 +95,6 @@ const PaymentPage = () => {
 
         const userData = await response.json();
 
-        // Заполняем данные из БД
         setPaymentData((prev) => ({
           ...prev,
           companyName: userData.companyName,
@@ -134,7 +124,8 @@ const PaymentPage = () => {
         // ===== КОНЕЦ ИСПРАВЛЕНИЯ =====
       } catch (err) {
         console.error("Ошибка загрузки профиля:", err);
-        setError("Не удалось загрузить данные компании");
+        setError("Не удалось загрузить данные компании. Возможно, сессия истекла.");
+        setTimeout(() => navigate("/login"), 2000); // Если даже умный запрос не справился - отправляем на логин
       } finally {
         setProfileLoading(false);
       }
@@ -260,14 +251,12 @@ const PaymentPage = () => {
 
       console.log("Отправляемый payload:", JSON.stringify(payload, null, 2));
 
-      const response = await fetch(
+      const response = await fetchWithAuth(
         "http://localhost:8080/api/dispatcher/payments/corporate",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          // Content-Type оставляем, чтобы сервер понял, что мы шлем JSON
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
       );
@@ -290,25 +279,48 @@ const PaymentPage = () => {
   };
   const downloadInvoice = async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const response = await fetch(
-        `http://localhost:8080/api/dispatcher/payments/${createdPayment.id}/invoice`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      // Никаких ручных токенов!
+      const response = await fetchWithAuth(
+        `http://localhost:8080/api/dispatcher/payments/${createdPayment.id}/invoice`
       );
+
+      if (!response.ok) throw new Error("Ошибка при скачивании счета");
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `invoice_${createdPayment.paymentDocument || "rzd"}.pdf`;
+      a.download = `invoice_${createdPayment.payment_document || "rzd"}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
     } catch (err) {
       console.error(err);
-      setError("Ошибка при скачивании PDF");
+      setError("Ошибка при скачивании PDF счета");
+    }
+  };
+
+  const downloadContract = async (orderId) => {
+    try {
+      // Удалил ошибочный POST запрос с payload. 
+      // Проверь, правильный ли URL у тебя на бэкенде для скачивания договора!
+      const response = await fetchWithAuth(
+        `http://localhost:8080/api/orders/${orderId}/contract`
+      );
+
+      if (!response.ok) throw new Error("Ошибка сервера при скачивании договора");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `contract_${orderId.substring(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error(err);
+      setError("Не удалось скачать договор");
     }
   };
 
@@ -613,6 +625,10 @@ const PaymentPage = () => {
               >
                 <button onClick={downloadInvoice} className="btn btn-primary">
                   Скачать платежное поручение
+                </button>
+                <button onClick={() => downloadContract(orderId)}
+                  className="btn btn-primary">
+                  Скачать договор
                 </button>
                 <button
                   onClick={() => navigate("/")}
