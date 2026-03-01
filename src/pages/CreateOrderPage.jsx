@@ -70,24 +70,16 @@ const CreateOrderPage = () => {
       //   });
 
       if (!response.ok) {
-        // Пытаемся прочитать JSON с ошибкой от бэкенда
         const errorData = await response.json().catch(() => null);
-
-        // Если бэкенд прислал поле message (наш валидатор!), показываем его
         if (errorData && errorData.message) {
           throw new Error(errorData.message);
         }
-
-        // Если что-то совсем сломалось
         throw new Error("Ошибка при создании заявки");
       }
 
       const data = await response.json();
-
-      // ЛОГИРУЕМ ЧТО ПРИШЛО С СЕРВЕРА
       console.log("Ответ от сервера:", data);
 
-      // ИСПРАВЛЕНО: проверяем разные возможные имена поля
       let newOrderId = null;
 
       if (data.id) {
@@ -161,8 +153,6 @@ const CreateOrderPage = () => {
       setCalculating(false);
     }
   };
-
-  // ШАГ 3: Расчет полной стоимости для выбранного вагона
   const calculateFullPrice = async (wagonId) => {
     setCalculating(true);
     try {
@@ -193,7 +183,6 @@ const CreateOrderPage = () => {
     }
   };
 
-  // ШАГ 4: Резервирование вагона
   const reserveWagon = async (wagonId) => {
     setLoading(true);
     try {
