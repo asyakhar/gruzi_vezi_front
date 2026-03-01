@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./MainPage.css";
 import "./WagonSearchResult.css";
 import { fetchWithAuth } from "../api";
-
+import AutocompleteInput from "./AutocompleteInput";
 const CreateOrderPage = () => {
   const navigate = useNavigate();
 
@@ -183,7 +183,6 @@ const CreateOrderPage = () => {
     }
   };
 
-<<<<<<< HEAD
   // ШАГ 4: Резервирование вагона
   //   const reserveWagon = async (wagonId) => {
   //     setLoading(true);
@@ -215,8 +214,6 @@ const CreateOrderPage = () => {
   //       setLoading(false);
   //     }
   //   };
-=======
->>>>>>> 675a3980a8a15e78e399d0de2b90c0643b15eee3
   const reserveWagon = async (wagonId) => {
     setLoading(true);
     try {
@@ -351,27 +348,23 @@ const CreateOrderPage = () => {
         >
           <div style={{ display: "flex", gap: "20px" }}>
             <div style={{ flex: 1 }}>
-              <label>Станция отправления *</label>
-              <input
-                type="text"
+              <AutocompleteInput
+                label="Станция отправления"
                 name="departureStation"
                 value={formData.departureStation}
                 onChange={handleChange}
-                className="form-input"
-                required
                 placeholder="Москва-Товарная"
+                required={true}
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label>Станция назначения *</label>
-              <input
-                type="text"
+              <AutocompleteInput
+                label="Станция назначения"
                 name="destinationStation"
                 value={formData.destinationStation}
                 onChange={handleChange}
-                className="form-input"
-                required
                 placeholder="Екатеринбург-Товарный"
+                required={true}
               />
             </div>
           </div>
@@ -483,8 +476,9 @@ const CreateOrderPage = () => {
             {wagons.map((wagon) => (
               <div
                 key={wagon.wagonId}
-                className={`wagon-card ${selectedWagon?.wagonId === wagon.wagonId ? "recommended" : ""
-                  }`}
+                className={`wagon-card ${
+                  selectedWagon?.wagonId === wagon.wagonId ? "recommended" : ""
+                }`}
               >
                 <div className="wagon-header">
                   <span className="wagon-type">

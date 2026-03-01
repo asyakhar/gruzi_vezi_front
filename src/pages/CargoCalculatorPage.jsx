@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MainPage.css";
 import "./CalculatorPage.css"; // Создадим отдельный CSS для калькулятора
-
+import AutocompleteInput from "./AutocompleteInput";
 const CargoCalculatorPage = () => {
   const navigate = useNavigate();
 
@@ -143,8 +143,9 @@ const CargoCalculatorPage = () => {
     return (
       <div className="calculator-progress">
         <div
-          className={`progress-step ${currentStep >= 1 ? "active" : ""} ${currentStep > 1 ? "completed" : ""
-            }`}
+          className={`progress-step ${currentStep >= 1 ? "active" : ""} ${
+            currentStep > 1 ? "completed" : ""
+          }`}
         >
           <span className="step-number">1</span>
           <span className="step-label">Маршрут</span>
@@ -153,8 +154,9 @@ const CargoCalculatorPage = () => {
           className={`progress-line ${currentStep > 1 ? "active" : ""}`}
         ></div>
         <div
-          className={`progress-step ${currentStep >= 2 ? "active" : ""} ${currentStep > 2 ? "completed" : ""
-            }`}
+          className={`progress-step ${currentStep >= 2 ? "active" : ""} ${
+            currentStep > 2 ? "completed" : ""
+          }`}
         >
           <span className="step-number">2</span>
           <span className="step-label">Параметры груза</span>
@@ -176,31 +178,23 @@ const CargoCalculatorPage = () => {
       <h3 className="step-title">Шаг 1: Маршрут перевозки</h3>
       <div className="form-row">
         <div className="form-group">
-          <label className="form-label">
-            Станция отправления <span className="required">*</span>
-          </label>
-          <input
-            type="text"
+          <AutocompleteInput
+            label="Станция отправления"
             name="departureStation"
             value={formData.departureStation}
             onChange={handleChange}
-            className="form-input"
             placeholder="Москва-Товарная"
-            required
+            required={true}
           />
         </div>
         <div className="form-group">
-          <label className="form-label">
-            Станция назначения <span className="required">*</span>
-          </label>
-          <input
-            type="text"
+          <AutocompleteInput
+            label="Станция назначения"
             name="destinationStation"
             value={formData.destinationStation}
             onChange={handleChange}
-            className="form-input"
             placeholder="Екатеринбург-Товарный"
-            required
+            required={true}
           />
         </div>
       </div>
@@ -427,7 +421,7 @@ const CargoCalculatorPage = () => {
                 {Math.round(
                   (calculationResult.truckCarbonFootprint -
                     calculationResult.carbonFootprintKg) /
-                  20
+                    20
                 )}{" "}
                 деревьев
               </div>
