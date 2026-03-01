@@ -42,6 +42,23 @@ const MainPage = () => {
     alert("Вы успешно вышли из аккаунта");
   };
 
+  // Функция для проверки авторизации при клике на оформление заявки
+  const handleOrderClick = (e) => {
+    e.preventDefault(); // Останавливаем стандартный переход по ссылке
+
+    // Проверяем, есть ли токен в памяти браузера
+    const token = localStorage.getItem("accessToken");
+
+    if (token) {
+      // Если токен есть, пускаем на страницу заявки
+      navigate("/create-order");
+    } else {
+      // Если токена нет, просим войти
+      alert("Для оформления заявки необходимо войти в аккаунт.");
+      navigate("/login");
+    }
+  };
+
   return (
     <div className="main-page">
       {/* Шапка сайта */}
@@ -154,9 +171,10 @@ const MainPage = () => {
                 <p className="feature-description">
                   Воспользуйтесь удобным инструментом для оформления заявки.
                 </p>
-                <Link to="/create-order" className="feature-link">
+                {/* Меняем ссылку на кнопку/ссылку с нашим перехватчиком onClick */}
+                <a onClick={handleOrderClick} className="feature-link" style={{ cursor: "pointer" }}>
                   Перейти →
-                </Link>
+                </a>
               </div>
 
               {/* Карточка 4 - О кабинете */}

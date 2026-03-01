@@ -12,7 +12,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.5;
   color: #333;
-  background: #ffffff !important; 
+  background: #ffffff !important;
 }
 
 /* Главный контейнер страницы */
@@ -523,18 +523,20 @@ select.form-input:focus {
 }
 
 /* Специальный класс для комично больших инпутов */
-.login-input {
+/* Обрати внимание, между классами нет пробела! */
+.form-input.login-input {
   font-size: 4rem;
   line-height: 1;
   padding: 5px 15px;
   height: 90px;
 }
 
-.login-input::placeholder {
+.form-input.login-input::placeholder {
   font-size: 3rem;
   line-height: 1;
   vertical-align: middle;
 }
+
 /* Фикс для создания заявки */
 .main-page {
   display: flex;

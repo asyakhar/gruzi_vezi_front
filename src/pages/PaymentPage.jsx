@@ -26,7 +26,6 @@ const PaymentPage = () => {
   const [error, setError] = useState(null);
   const [createdPayment, setCreatedPayment] = useState(null);
 
-  // ЗАГРУЗКА ПРОФИЛЯ ПРИ МОНТИРОВАНИИ
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
@@ -215,7 +214,7 @@ const PaymentPage = () => {
           )}
           {error && (
             <div className="message error" style={{ marginBottom: "20px" }}>
-              ❌ {error}
+              {error}
             </div>
           )}
 

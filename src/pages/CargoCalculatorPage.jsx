@@ -143,9 +143,8 @@ const CargoCalculatorPage = () => {
     return (
       <div className="calculator-progress">
         <div
-          className={`progress-step ${currentStep >= 1 ? "active" : ""} ${
-            currentStep > 1 ? "completed" : ""
-          }`}
+          className={`progress-step ${currentStep >= 1 ? "active" : ""} ${currentStep > 1 ? "completed" : ""
+            }`}
         >
           <span className="step-number">1</span>
           <span className="step-label">Маршрут</span>
@@ -154,9 +153,8 @@ const CargoCalculatorPage = () => {
           className={`progress-line ${currentStep > 1 ? "active" : ""}`}
         ></div>
         <div
-          className={`progress-step ${currentStep >= 2 ? "active" : ""} ${
-            currentStep > 2 ? "completed" : ""
-          }`}
+          className={`progress-step ${currentStep >= 2 ? "active" : ""} ${currentStep > 2 ? "completed" : ""
+            }`}
         >
           <span className="step-number">2</span>
           <span className="step-label">Параметры груза</span>
@@ -349,7 +347,7 @@ const CargoCalculatorPage = () => {
       ) : (
         <div className="calculation-result">
           <div className="result-card">
-            <h4 className="result-title">💰 Стоимость перевозки</h4>
+            <h4 className="result-title">Стоимость перевозки</h4>
             <div className="result-amount">
               {calculationResult.totalPrice.toLocaleString()} ₽
             </div>
@@ -375,12 +373,11 @@ const CargoCalculatorPage = () => {
           </div>
 
           <div className="result-card carbon-card">
-            <h4 className="result-title">🌍 Углеродный след</h4>
+            <h4 className="result-title">Углеродный след</h4>
 
             <div className="carbon-comparison">
               <div className="carbon-item">
                 <div className="carbon-label">
-                  <span className="carbon-icon">🚂</span>
                   <span>Ж/Д транспорт</span>
                 </div>
                 <div className="carbon-value">
@@ -402,7 +399,6 @@ const CargoCalculatorPage = () => {
 
               <div className="carbon-item">
                 <div className="carbon-label">
-                  <span className="carbon-icon">🚛</span>
                   <span>Автотранспорт</span>
                 </div>
                 <div className="carbon-value">
@@ -418,7 +414,7 @@ const CargoCalculatorPage = () => {
             </div>
 
             <div className="carbon-savings">
-              <div className="savings-badge">🌱 Экономия выбросов</div>
+              <div className="savings-badge">Экономия выбросов</div>
               <div className="savings-amount">
                 {(
                   calculationResult.truckCarbonFootprint -
@@ -431,7 +427,7 @@ const CargoCalculatorPage = () => {
                 {Math.round(
                   (calculationResult.truckCarbonFootprint -
                     calculationResult.carbonFootprintKg) /
-                    20
+                  20
                 )}{" "}
                 деревьев
               </div>
@@ -447,7 +443,7 @@ const CargoCalculatorPage = () => {
 
           {calculationResult.recommendedServices?.length > 0 && (
             <div className="result-card">
-              <h4 className="result-title">✨ Рекомендуемые услуги</h4>
+              <h4 className="result-title">Рекомендуемые услуги</h4>
               <div className="services-list">
                 {calculationResult.recommendedServices.map((service, idx) => (
                   <div key={idx} className="service-item">
@@ -492,7 +488,7 @@ const CargoCalculatorPage = () => {
 
         {renderProgressBar()}
 
-        {error && <div className="message error">❌ {error}</div>}
+        {error && <div className="message error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="calculator-form">
           {currentStep === 1 && renderStep1()}
