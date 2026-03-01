@@ -183,29 +183,75 @@ const CreateOrderPage = () => {
   };
 
   // ШАГ 4: Резервирование вагона
+  //   const reserveWagon = async (wagonId) => {
+  //     setLoading(true);
+  //     try {
+  //       const token = localStorage.getItem("accessToken");
+
+  //       const response = await fetch(
+  //         `http://localhost:8080/api/dispatcher/wagons/${wagonId}/reserve?orderId=${orderId}&minutes=30`,
+  //         {
+  //           method: "POST",
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         }
+  //       );
+
+  //       if (!response.ok) throw new Error("Ошибка при резервировании");
+
+  //       const result = await response.text();
+  //       setMessage(` ${result}. Переходите к оплате.`);
+
+  //       // Переход к оплате через 2 секунды
+  //       setTimeout(() => {
+  //         navigate(`/payment/create?orderId=${orderId}&wagonId=${wagonId}`);
+  //       }, 2000);
+  //     } catch (err) {
+  //       setError(err.message);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
   const reserveWagon = async (wagonId) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
 
-      const response = await fetch(
+      // 1. Сначала резервируем вагон
+      const reserveResponse = await fetch(
         `http://localhost:8080/api/dispatcher/wagons/${wagonId}/reserve?orderId=${orderId}&minutes=30`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      if (!response.ok) throw new Error("Ошибка при резервировании");
+      if (!reserveResponse.ok) throw new Error("Ошибка при резервировании");
 
-      const result = await response.text();
+      // 2. СОХРАНЯЕМ ВЫБРАННЫЙ ВАГОН И ЦЕНУ В ЗАКАЗ (НОВЫЙ ШАГ!)
+      const confirmResponse = await fetch(
+        `http://localhost:8080/api/orders/${orderId}/confirm-wagon?wagonId=${wagonId}&totalPrice=${fullPrice.totalPrice}`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!confirmResponse.ok) {
+        const errorText = await confirmResponse.text();
+        console.error("Ошибка подтверждения:", errorText);
+        throw new Error("Не удалось сохранить данные в заказ");
+      }
+
+      const result = await reserveResponse.text();
       setMessage(` ${result}. Переходите к оплате.`);
 
-      // Переход к оплате через 2 секунды
+      // Переход к оплате с параметрами
       setTimeout(() => {
-        navigate(`/payment/create?orderId=${orderId}&wagonId=${wagonId}`);
+        navigate(
+          `/payment/create?orderId=${orderId}&wagonId=${wagonId}&amount=${fullPrice.totalPrice}`
+        );
       }, 2000);
     } catch (err) {
       setError(err.message);
@@ -213,7 +259,6 @@ const CreateOrderPage = () => {
       setLoading(false);
     }
   };
-
   const getMatchClass = (percentage) => {
     if (percentage >= 90) return "match-ideal";
     if (percentage >= 75) return "match-good";

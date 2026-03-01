@@ -8,6 +8,7 @@ const PaymentPage = () => {
   const [copied, setCopied] = React.useState(false);
   const orderId = searchParams.get("orderId");
   const wagonId = searchParams.get("wagonId");
+  const [orderAmount, setOrderAmount] = useState(0);
 
   const [paymentData, setPaymentData] = useState({
     companyName: "",
@@ -26,6 +27,62 @@ const PaymentPage = () => {
   const [error, setError] = useState(null);
   const [createdPayment, setCreatedPayment] = useState(null);
 
+  // useEffect(() => {
+  //   const loadUserProfile = async () => {
+  //     try {
+  //       const token = localStorage.getItem("accessToken");
+  //       if (!token) {
+  //         setError("Требуется авторизация");
+  //         setTimeout(() => navigate("/login"), 2000);
+  //         return;
+  //       }
+
+  //       // Загружаем профиль пользователя
+  //       const response = await fetch("http://localhost:8080/api/user/profile", {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+
+  //       if (!response.ok) {
+  //         throw new Error("Ошибка загрузки профиля");
+  //       }
+
+  //       const userData = await response.json();
+
+  //       // Заполняем данные из БД
+  //       setPaymentData((prev) => ({
+  //         ...prev,
+  //         companyName: userData.companyName,
+  //         inn: userData.inn,
+  //       }));
+  //       if (orderId) {
+  //         const orderResponse = await fetch(
+  //           `http://localhost:8080/api/orders/${orderId}`,
+  //           {
+  //             headers: { Authorization: `Bearer ${token}` },
+  //           }
+  //         );
+
+  //         if (orderResponse.ok) {
+  //           const orderData = await orderResponse.json();
+  //           console.log("Данные заказа:", orderData); // Для отладки
+
+  //           // Убедимся, что totalPrice - число
+  //           const price = orderData.totalPrice || 0;
+  //           setOrderAmount(Number(price));
+  //         } else {
+  //           console.warn("Не удалось загрузить заказ");
+  //         }
+  //       }
+  //     } catch (err) {
+  //       console.error("Ошибка загрузки профиля:", err);
+  //       setError("Не удалось загрузить данные компании");
+  //     } finally {
+  //       setProfileLoading(false);
+  //     }
+  //   };
+
+  //   loadUserProfile();
+  // }, [navigate]);
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
@@ -53,6 +110,28 @@ const PaymentPage = () => {
           companyName: userData.companyName,
           inn: userData.inn,
         }));
+
+        // ===== ИСПРАВЛЕНО: ЗАГРУЗКА ЗАКАЗА =====
+        if (orderId) {
+          const orderResponse = await fetch(
+            `http://localhost:8080/api/orders/${orderId}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (orderResponse.ok) {
+            const orderData = await orderResponse.json();
+            console.log("Данные заказа:", orderData); // Для отладки
+
+            // Убедимся, что totalPrice - число
+            const price = orderData.totalPrice || 0;
+            setOrderAmount(Number(price));
+          } else {
+            console.warn("Не удалось загрузить заказ");
+          }
+        }
+        // ===== КОНЕЦ ИСПРАВЛЕНИЯ =====
       } catch (err) {
         console.error("Ошибка загрузки профиля:", err);
         setError("Не удалось загрузить данные компании");
@@ -62,8 +141,7 @@ const PaymentPage = () => {
     };
 
     loadUserProfile();
-  }, [navigate]);
-
+  }, [navigate, orderId]); // Добавить orderId в зависимости
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPaymentData({ ...paymentData, [name]: value });
@@ -79,6 +157,63 @@ const PaymentPage = () => {
     }
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   setError(null);
+
+  //   try {
+  //     const token = localStorage.getItem("accessToken");
+
+  //     console.log("orderId из URL:", orderId);
+
+  //     if (!orderId) {
+  //       throw new Error("Не указан ID заказа в URL");
+  //     }
+  //     console.log("Тип amount:", typeof orderAmount, "Значение:", orderAmount);
+  //     const payload = {
+  //       orderId: orderId,
+  //       amount: Number(orderAmount),
+  //       companyName: paymentData.companyName,
+  //       inn: paymentData.inn,
+  //       kpp: paymentData.kpp || null,
+  //       bik: paymentData.bik,
+  //       accountNumber: paymentData.accountNumber,
+  //       correspondentAccount: paymentData.correspondentAccount || "",
+  //       bankName: paymentData.bankName,
+  //       paymentPurpose: paymentData.paymentPurpose,
+  //     };
+
+  //     console.log("Отправляемый payload:", JSON.stringify(payload, null, 2));
+
+  //     const response = await fetch(
+  //       "http://localhost:8080/api/dispatcher/payments/corporate",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify(payload),
+  //       }
+  //     );
+
+  //     if (!response.ok) {
+  //       const errorText = await response.text();
+  //       console.error("Ответ сервера с ошибкой:", errorText);
+  //       throw new Error(`Ошибка ${response.status}: ${errorText}`);
+  //     }
+
+  //     const data = await response.json();
+  //     setCreatedPayment(data);
+  //     setMessage(`Платеж успешно создан!`);
+  //   } catch (err) {
+  //     console.error("Полная ошибка:", err);
+  //     setError(err.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -93,9 +228,26 @@ const PaymentPage = () => {
         throw new Error("Не указан ID заказа в URL");
       }
 
+      // ===== ИСПРАВЛЕНО: ПРОВЕРКА СУММЫ =====
+      console.log("Тип amount:", typeof orderAmount, "Значение:", orderAmount);
+
+      // Преобразуем в число с двумя знаками после запятой
+      let amountValue = parseFloat(orderAmount);
+
+      if (isNaN(amountValue) || amountValue <= 0) {
+        // Если сумма не загрузилась, пробуем взять из URL
+        const urlAmount = searchParams.get("amount");
+        if (urlAmount) {
+          amountValue = parseFloat(urlAmount);
+        } else {
+          throw new Error("Не удалось определить сумму платежа");
+        }
+      }
+      // ===== КОНЕЦ ИСПРАВЛЕНИЯ =====
+
       const payload = {
         orderId: orderId,
-        amount: 150000.0,
+        amount: amountValue, // теперь точно число
         companyName: paymentData.companyName,
         inn: paymentData.inn,
         kpp: paymentData.kpp || null,
@@ -136,7 +288,6 @@ const PaymentPage = () => {
       setLoading(false);
     }
   };
-
   const downloadInvoice = async () => {
     try {
       const token = localStorage.getItem("accessToken");

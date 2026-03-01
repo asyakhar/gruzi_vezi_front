@@ -144,10 +144,7 @@ const ProfilePage = () => {
       all: orders.length,
       черновик: orders.filter((o) => o.status === "черновик").length,
       поиск_вагона: orders.filter((o) => o.status === "поиск_вагона").length,
-      ожидает_оплаты: orders.filter((o) => o.status === "ожидает_оплаты")
-        .length,
-      в_пути: orders.filter((o) => o.status === "в_пути").length,
-      доставлен: orders.filter((o) => o.status === "доставлен").length,
+      оплачен: orders.filter((o) => o.status === "оплачен").length,
     };
     return stats;
   };
@@ -263,13 +260,7 @@ const ProfilePage = () => {
                     <option value="поиск_вагона">
                       Поиск вагона ({stats.поиск_вагона})
                     </option>
-                    <option value="ожидает_оплаты">
-                      Ожидают оплаты ({stats.ожидает_оплаты})
-                    </option>
-                    <option value="в_пути">В пути ({stats.в_пути})</option>
-                    <option value="доставлен">
-                      Доставлены ({stats.доставлен})
-                    </option>
+                    <option value="оплачен">Оплачен ({stats.оплачен})</option>
                   </select>
                 </div>
               </div>
