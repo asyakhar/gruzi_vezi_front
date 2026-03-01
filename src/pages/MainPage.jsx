@@ -59,6 +59,17 @@ const MainPage = () => {
     }
   };
 
+  const handleProfileClick = (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      navigate("/profile");
+    } else {
+      alert("Для входа в личный кабинет необходимо авторизоваться.");
+      navigate("/login");
+    }
+  };
+
   return (
     <div className="main-page">
       {/* Шапка сайта */}
@@ -153,7 +164,7 @@ const MainPage = () => {
                 </Link>
               </div>
 
-              {/* Карточка 2 - Интерактивная карта */}
+              {/* Карточка 2 - Интерактивная карта
               <div className="feature-card">
                 <h3 className="feature-title">Интерактивная карта</h3>
                 <p className="feature-description">
@@ -163,7 +174,7 @@ const MainPage = () => {
                 <a href="#" className="feature-link">
                   Открыть карту →
                 </a>
-              </div>
+              </div> */}
 
               {/* Карточка 3 - Справочники */}
               <div className="feature-card">
@@ -177,15 +188,14 @@ const MainPage = () => {
                 </a>
               </div>
 
-              {/* Карточка 4 - О кабинете */}
+              {/* Карточка 3 - О кабинете */}
               <div className="feature-card">
-                <h3 className="feature-title">О кабинете</h3>
+                <h3 className="feature-title">Личный кабинет</h3>
                 <p className="feature-description">
-                  Ознакомьтесь с инструкциями и презентациями и узнайте больше о
-                  работе с Личным кабинетом.
+                  Ознакомьтесь с текущими заявками и профилем в личном кабинете.
                 </p>
-                <a href="#" className="feature-link">
-                  Узнать больше →
+                <a onClick={handleProfileClick} className="feature-link" style={{ cursor: "pointer" }}>
+                  Перейти в кабинет →
                 </a>
               </div>
             </div>
