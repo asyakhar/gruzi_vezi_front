@@ -671,3 +671,352 @@ select.form-input:focus {
     padding: 4px 10px;
   }
 }
+/* ===== СТИЛИ ДЛЯ ЧЕКБОКСОВ ===== */
+
+/* Контейнер для услуги */
+.service-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 15px 20px;
+  border-bottom: 1px solid #edf2f7;
+  transition: background-color 0.2s;
+  gap: 15px;
+}
+
+.service-item:hover {
+  background-color: #f8fafc;
+}
+
+/* Стили для чекбокса - КРУГЛЫЙ */
+.service-item input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #cbd5e0;
+  border-radius: 6px; /* Чуть скругленные, но не круглые */
+  margin-top: 2px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  background: white;
+}
+
+/* Круглый вариант - раскомментируйте если нужны круглые */
+/*
+.service-item input[type="checkbox"] {
+  border-radius: 50%;
+}
+*/
+
+.service-item input[type="checkbox"]:checked {
+  background-color: #0066cc;
+  border-color: #0066cc;
+}
+
+.service-item input[type="checkbox"]:checked::after {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.service-item input[type="checkbox"]:hover {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.service-item input[type="checkbox"]:disabled {
+  background-color: #e2e8f0;
+  border-color: #cbd5e0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.service-item input[type="checkbox"]:disabled:checked {
+  background-color: #94a3b8;
+  border-color: #94a3b8;
+}
+
+.service-item input[type="checkbox"]:disabled + div label {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Контейнер для текста услуги */
+.service-item > div:first-of-type {
+  flex: 1;
+}
+
+/* Название услуги */
+.service-item label {
+  font-weight: 600;
+  color: #2d3748;
+  cursor: pointer;
+  display: inline-block;
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.service-item label:hover {
+  color: #0066cc;
+}
+
+/* Бейдж "Рекомендуем" */
+.recommendation-badge {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 3px 10px;
+  background: linear-gradient(135deg, #f6b83d, #f59e0b);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+  vertical-align: middle;
+}
+
+/* Категория услуги */
+.service-category-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 20px;
+  margin-left: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+/* Описание услуги */
+.service-description {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+  line-height: 1.4;
+  padding-right: 10px;
+}
+
+/* Причина рекомендации */
+.service-reason {
+  font-size: 12px;
+  color: #059669;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0fdf4;
+  padding: 4px 10px;
+  border-radius: 16px;
+  width: fit-content;
+}
+
+.service-reason::before {
+  content: "⭐";
+  font-size: 11px;
+  margin-right: 4px;
+}
+
+/* Цена услуги */
+.service-price {
+  font-weight: 700;
+  color: #0066cc;
+  text-align: right;
+  min-width: 120px;
+  font-size: 16px;
+}
+
+.service-price small {
+  font-weight: normal;
+  font-size: 11px;
+  color: #94a3b8;
+  display: block;
+  margin-top: 4px;
+}
+
+/* Итоговая стоимость */
+.total-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  margin-top: 15px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 10px;
+  font-weight: 700;
+  border: 2px solid #0066cc;
+}
+
+.total-price-label {
+  font-size: 16px;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.total-price-amount {
+  font-size: 26px;
+  color: #0066cc;
+  font-weight: 800;
+}
+
+/* Информация о грузе */
+.cargo-info {
+  margin-top: 15px;
+  padding: 15px 20px;
+  background: #e8f4fd;
+  border-radius: 10px;
+  border-left: 4px solid #0066cc;
+}
+
+.cargo-info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.cargo-info-item:last-child {
+  margin-bottom: 0;
+}
+
+.cargo-info-label {
+  color: #475569;
+  font-weight: 500;
+}
+
+.cargo-info-value {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Заголовок списка услуг */
+.services-list h4 {
+  margin: 0;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+  .service-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .service-price {
+    text-align: left;
+    margin-left: 37px; /* Выравнивание с учетом чекбокса */
+  }
+
+  .total-price-row {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    padding: 15px;
+  }
+
+  .total-price-amount {
+    font-size: 22px;
+  }
+
+  .recommendation-badge,
+  .service-category-badge {
+    margin-left: 0;
+    margin-top: 5px;
+  }
+
+  .service-reason {
+    width: 100%;
+  }
+}
+
+/* Стили для категорий (цветные) */
+.service-category.safety {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.service-category.logistics {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.service-category.monitoring {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.service-category.documents {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+/* Анимация появления */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.services-list {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Стили для разделителя */
+.service-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+  margin: 10px 0;
+}
+
+/* Стили для цены со скидкой */
+.price-discount {
+  color: #10b981;
+  font-size: 12px;
+  display: block;
+  margin-top: 2px;
+}
+
+.price-discount::before {
+  content: "−";
+  margin-right: 2px;
+}
+
+/* Стили для обязательных услуг */
+.service-mandatory {
+  background: #f1f5f9;
+  border-left: 3px solid #ef4444;
+}
+
+.service-mandatory-badge {
+  background: #ef4444;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 10px;
+  text-transform: uppercase;
+}

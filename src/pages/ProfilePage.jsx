@@ -260,7 +260,7 @@ const ProfilePage = () => {
                     <option value="поиск_вагона">
                       Поиск вагона ({stats.поиск_вагона})
                     </option>
-                    <option value="оплачен">Оплачен ({stats.оплачен})</option>
+                    <option value="оплачен"> Оплачен ({stats.оплачен})</option>
                   </select>
                 </div>
               </div>

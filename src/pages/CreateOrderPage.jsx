@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MainPage.css";
 import "./WagonSearchResult.css";
 import { fetchWithAuth } from "../api";
 import AutocompleteInput from "./AutocompleteInput";
+
 const CreateOrderPage = () => {
   const navigate = useNavigate();
 
@@ -11,10 +12,10 @@ const CreateOrderPage = () => {
     departureStation: "",
     destinationStation: "",
     requestedWagonType: "крытый",
-    cargoType: "Электроника", // Изменил на русские названия
+    cargoType: "Электроника",
     weightKg: "",
     volumeM3: "",
-    packagingType: "Паллеты", // Изменил на русские
+    packagingType: "Паллеты",
   });
 
   const [orderId, setOrderId] = useState(null);
@@ -26,9 +27,102 @@ const CreateOrderPage = () => {
   const [loading, setLoading] = useState(false);
   const [calculating, setCalculating] = useState(false);
 
+  // Храним выбранные услуги отдельно для каждого вагона
+  const [selectedServicesByWagon, setSelectedServicesByWagon] = useState({});
+
+  // Таймер для debounce запросов
+  const [priceCalcTimer, setPriceCalcTimer] = useState(null);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  // Обработчик выбора услуги (чекбокс) - БЕЗ АВТОМАТИЧЕСКОГО ПЕРЕСЧЕТА
+  const handleServiceToggle = (wagonId, serviceCode) => {
+    // Обновляем состояние выбранных услуг для конкретного вагона
+    setSelectedServicesByWagon((prev) => {
+      const wagonServices = prev[wagonId] || new Set();
+      const newSet = new Set(wagonServices);
+
+      if (newSet.has(serviceCode)) {
+        newSet.delete(serviceCode);
+      } else {
+        newSet.add(serviceCode);
+      }
+
+      return {
+        ...prev,
+        [wagonId]: newSet,
+      };
+    });
+  };
+  const cancelReservation = async (wagonId) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      const response = await fetch(
+        `http://localhost:8080/api/dispatcher/wagons/${wagonId}/release`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error("Ошибка при отмене брони");
+
+      setMessage(`✓ Бронь отменена`);
+      setSelectedWagon(null);
+      setFullPrice(null);
+
+      // Обновляем список вагонов
+      await searchWagons(orderId);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Функция для пересчета цены (вызывается по кнопке)
+  const recalculatePrice = async (wagonId) => {
+    if (!orderId || !wagonId) return;
+
+    setCalculating(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      const selectedServices = selectedServicesByWagon[wagonId] || new Set();
+
+      const response = await fetch(
+        `http://localhost:8080/api/dispatcher/pricing/full?orderId=${orderId}&wagonId=${wagonId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            selectedServices: Array.from(selectedServices),
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Ошибка при расчете стоимости");
+
+      const data = await response.json();
+      console.log("Ответ от сервера:", data);
+
+      setFullPrice(data);
+
+      // Находим выбранный вагон
+      const wagon = wagons.find((w) => w.wagonId === wagonId);
+      setSelectedWagon({ ...wagon, price: data });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCalculating(false);
+    }
   };
 
   // ШАГ 1: Создание заявки
@@ -39,6 +133,7 @@ const CreateOrderPage = () => {
     setWagons([]);
     setSelectedWagon(null);
     setFullPrice(null);
+    setSelectedServicesByWagon({});
     setLoading(true);
 
     const payload = {
@@ -58,16 +153,6 @@ const CreateOrderPage = () => {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      //   const token = localStorage.getItem("accessToken");
-
-      //   const response = await fetch("http://localhost:8080/api/orders", {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //     body: JSON.stringify(payload),
-      //   });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -95,7 +180,7 @@ const CreateOrderPage = () => {
 
       setOrderId(newOrderId);
       setMessage(
-        ` Заявка №${newOrderId.slice(0, 8)} создана! Ищем подходящие вагоны...`
+        `✓ Заявка №${newOrderId.slice(0, 8)} создана! Ищем подходящие вагоны...`
       );
 
       // ШАГ 2: Автоматически ищем вагоны после создания заявки
@@ -153,24 +238,33 @@ const CreateOrderPage = () => {
       setCalculating(false);
     }
   };
+
+  // ШАГ 3: Первоначальный расчет стоимости (при выборе вагона)
   const calculateFullPrice = async (wagonId) => {
     setCalculating(true);
     try {
       const token = localStorage.getItem("accessToken");
+      const selectedServices = selectedServicesByWagon[wagonId] || new Set();
 
       const response = await fetch(
         `http://localhost:8080/api/dispatcher/pricing/full?orderId=${orderId}&wagonId=${wagonId}`,
         {
           method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify({
+            selectedServices: Array.from(selectedServices),
+          }),
         }
       );
 
       if (!response.ok) throw new Error("Ошибка при расчете стоимости");
 
       const data = await response.json();
+      console.log("Ответ от сервера:", data);
+
       setFullPrice(data);
 
       // Находим выбранный вагон
@@ -184,42 +278,58 @@ const CreateOrderPage = () => {
   };
 
   // ШАГ 4: Резервирование вагона
-  //   const reserveWagon = async (wagonId) => {
-  //     setLoading(true);
-  //     try {
-  //       const token = localStorage.getItem("accessToken");
+  // const reserveWagon = async (wagonId) => {
+  //   setLoading(true);
+  //   try {
+  //     const token = localStorage.getItem("accessToken");
 
-  //       const response = await fetch(
-  //         `http://localhost:8080/api/dispatcher/wagons/${wagonId}/reserve?orderId=${orderId}&minutes=30`,
-  //         {
-  //           method: "POST",
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //         }
-  //       );
+  //     // 1. Сначала резервируем вагон
+  //     const reserveResponse = await fetch(
+  //       `http://localhost:8080/api/dispatcher/wagons/${wagonId}/reserve?orderId=${orderId}&minutes=30`,
+  //       {
+  //         method: "POST",
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
 
-  //       if (!response.ok) throw new Error("Ошибка при резервировании");
+  //     if (!reserveResponse.ok) throw new Error("Ошибка при резервировании");
 
-  //       const result = await response.text();
-  //       setMessage(` ${result}. Переходите к оплате.`);
+  //     // 2. СОХРАНЯЕМ ВЫБРАННЫЙ ВАГОН И ЦЕНУ В ЗАКАЗ
+  //     const confirmResponse = await fetch(
+  //       `http://localhost:8080/api/orders/${orderId}/confirm-wagon?wagonId=${wagonId}&totalPrice=${fullPrice.totalPrice}`,
+  //       {
+  //         method: "POST",
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
 
-  //       // Переход к оплате через 2 секунды
-  //       setTimeout(() => {
-  //         navigate(`/payment/create?orderId=${orderId}&wagonId=${wagonId}`);
-  //       }, 2000);
-  //     } catch (err) {
-  //       setError(err.message);
-  //     } finally {
-  //       setLoading(false);
+  //     if (!confirmResponse.ok) {
+  //       const errorText = await confirmResponse.text();
+  //       console.error("Ошибка подтверждения:", errorText);
+  //       throw new Error("Не удалось сохранить данные в заказ");
   //     }
-  //   };
+
+  //     const result = await reserveResponse.text();
+  //     setMessage(`✓ ${result}. Переходите к оплате.`);
+
+  //     // Переход к оплате с параметрами
+  //     setTimeout(() => {
+  //       navigate(
+  //         `/payment/create?orderId=${orderId}&wagonId=${wagonId}&amount=${fullPrice.totalPrice}`
+  //       );
+  //     }, 2000);
+  //   } catch (err) {
+  //     setError(err.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const reserveWagon = async (wagonId) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
 
-      // 1. Сначала резервируем вагон
+      // 1. Резервируем вагон
       const reserveResponse = await fetch(
         `http://localhost:8080/api/dispatcher/wagons/${wagonId}/reserve?orderId=${orderId}&minutes=30`,
         {
@@ -230,7 +340,7 @@ const CreateOrderPage = () => {
 
       if (!reserveResponse.ok) throw new Error("Ошибка при резервировании");
 
-      // 2. СОХРАНЯЕМ ВЫБРАННЫЙ ВАГОН И ЦЕНУ В ЗАКАЗ (НОВЫЙ ШАГ!)
+      // 2. Сохраняем в заказе
       const confirmResponse = await fetch(
         `http://localhost:8080/api/orders/${orderId}/confirm-wagon?wagonId=${wagonId}&totalPrice=${fullPrice.totalPrice}`,
         {
@@ -240,20 +350,23 @@ const CreateOrderPage = () => {
       );
 
       if (!confirmResponse.ok) {
-        const errorText = await confirmResponse.text();
-        console.error("Ошибка подтверждения:", errorText);
+        // Если не удалось сохранить - отменяем бронь
+        await fetch(
+          `http://localhost:8080/api/dispatcher/wagons/${wagonId}/release`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         throw new Error("Не удалось сохранить данные в заказ");
       }
 
-      const result = await reserveResponse.text();
-      setMessage(` ${result}. Переходите к оплате.`);
+      setMessage(`✓ Вагон забронирован. Переходите к оплате.`);
 
-      // Переход к оплате с параметрами
-      setTimeout(() => {
-        navigate(
-          `/payment/create?orderId=${orderId}&wagonId=${wagonId}&amount=${fullPrice.totalPrice}`
-        );
-      }, 2000);
+      // Переход к оплате
+      navigate(
+        `/payment/create?orderId=${orderId}&wagonId=${wagonId}&amount=${fullPrice.totalPrice}`
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -267,9 +380,35 @@ const CreateOrderPage = () => {
     return "match-poor";
   };
 
+  // Функция для получения текстовой метки категории
+  const getCategoryLabel = (category) => {
+    const labels = {
+      SAFETY: "Безопасность",
+      LOGISTICS: "Логистика",
+      DOCUMENTS: "Документы",
+      MONITORING: "Мониторинг",
+    };
+    return labels[category] || "Услуга";
+  };
+
+  // Функция для получения класса категории
+  const getCategoryClass = (category) => {
+    const classes = {
+      SAFETY: "safety",
+      LOGISTICS: "logistics",
+      DOCUMENTS: "documents",
+      MONITORING: "monitoring",
+    };
+    return classes[category] || "";
+  };
+
+  // Получаем выбранные услуги для текущего вагона
+  const getSelectedServicesForWagon = (wagonId) => {
+    return selectedServicesByWagon[wagonId] || new Set();
+  };
+
   return (
     <div className="main-page">
-      {/* ПОЛНАЯ ШАПКА КАК НА ГЛАВНОЙ СТРАНИЦЕ */}
       <header className="header">
         <div className="container header-container">
           <div
@@ -283,9 +422,7 @@ const CreateOrderPage = () => {
           <nav className="main-nav">
             <ul className="nav-list">
               <li>
-                {/* <a href="#" className="active">
-                  Грузовые перевозки
-                </a> */}
+                {/* <a href="#" className="active">Грузовые перевозки</a> */}
               </li>
             </ul>
           </nav>
@@ -303,8 +440,7 @@ const CreateOrderPage = () => {
           padding: "40px 0",
           maxWidth: "1000px",
           margin: "0 auto",
-          minHeight:
-            "calc(100vh - 80px - 300px)" /* 80px - высота шапки, 300px - примерная высота подвала */,
+          minHeight: "calc(100vh - 80px - 300px)",
         }}
       >
         <h2
@@ -318,8 +454,8 @@ const CreateOrderPage = () => {
           <div
             style={{
               padding: "15px",
-              background: message.includes("") ? "#d4edda" : "#fff3cd",
-              color: message.includes("") ? "#155724" : "#856404",
+              background: message.includes("✓") ? "#d4edda" : "#fff3cd",
+              color: message.includes("✓") ? "#155724" : "#856404",
               marginBottom: "20px",
               borderRadius: "5px",
             }}
@@ -473,111 +609,232 @@ const CreateOrderPage = () => {
               <div className="loading-spinner">Расчет стоимости...</div>
             )}
 
-            {wagons.map((wagon) => (
-              <div
-                key={wagon.wagonId}
-                className={`wagon-card ${
-                  selectedWagon?.wagonId === wagon.wagonId ? "recommended" : ""
-                }`}
-              >
-                <div className="wagon-header">
-                  <span className="wagon-type">
-                    Вагон {wagon.wagonNumber} ({wagon.wagonType})
-                  </span>
-                  <span
-                    className={`match-badge ${getMatchClass(
-                      wagon.matchPercentage
-                    )}`}
-                  >
-                    {wagon.recommendation} ({wagon.matchPercentage}%)
-                  </span>
-                </div>
+            {wagons.map((wagon) => {
+              const wagonSelectedServices = getSelectedServicesForWagon(
+                wagon.wagonId
+              );
 
-                <div className="wagon-details">
-                  <div className="detail-item">
-                    <div className="detail-label">Грузоподъемность</div>
-                    <div className="detail-value">{wagon.maxWeightKg} кг</div>
-                  </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Объем</div>
-                    <div className="detail-value">{wagon.maxVolumeM3} м³</div>
-                  </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Станция</div>
-                    <div className="detail-value">{wagon.currentStation}</div>
-                  </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Статус</div>
-                    <div className="detail-value">
-                      {wagon.availabilityStatus}
-                    </div>
-                  </div>
-                </div>
-
-                {wagon.distanceToStation > 0 && (
-                  <div className="distance-warning">
-                    ⚠️ Вагон на станции {wagon.currentStation} (подача через{" "}
-                    {wagon.estimatedArrivalHours} ч)
-                  </div>
-                )}
-
-                {selectedWagon?.wagonId === wagon.wagonId && fullPrice && (
-                  <div className="services-list">
-                    <h4>Дополнительные услуги:</h4>
-                    {fullPrice.recommendedServices.map((service, idx) => (
-                      <div key={idx} className="service-item">
-                        <span className="service-name">{service.name}</span>
-                        <span className="service-price">
-                          {service.price.toLocaleString()} ₽
-                        </span>
-                      </div>
-                    ))}
-                    <div
-                      className="service-item"
-                      style={{
-                        fontWeight: "bold",
-                        borderTop: "2px solid #0066cc",
-                        marginTop: "5px",
-                        paddingTop: "5px",
-                      }}
-                    >
-                      <span>ИТОГО:</span>
-                      <span>{fullPrice.totalPrice.toLocaleString()} ₽</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="price-block">
-                  <div>
-                    <span className="price-amount">
-                      {selectedWagon?.wagonId === wagon.wagonId && fullPrice
-                        ? fullPrice.totalPrice.toLocaleString()
-                        : wagon.estimatedPrice?.toLocaleString()}
+              return (
+                <div
+                  key={wagon.wagonId}
+                  className={`wagon-card ${
+                    selectedWagon?.wagonId === wagon.wagonId
+                      ? "recommended"
+                      : ""
+                  }`}
+                >
+                  <div className="wagon-header">
+                    <span className="wagon-type">
+                      Вагон {wagon.wagonNumber} ({wagon.wagonType})
                     </span>
-                    <span className="price-currency"> ₽</span>
+                    <span
+                      className={`match-badge ${getMatchClass(
+                        wagon.matchPercentage
+                      )}`}
+                    >
+                      {wagon.recommendation} ({wagon.matchPercentage}%)
+                    </span>
                   </div>
-                  <div>
-                    {selectedWagon?.wagonId === wagon.wagonId ? (
-                      <button
-                        className="btn-reserve"
-                        onClick={() => reserveWagon(wagon.wagonId)}
-                        disabled={loading}
-                      >
-                        {loading ? "Резервирование..." : "Забронировать"}
-                      </button>
-                    ) : (
-                      <button
-                        className="btn-reserve"
-                        onClick={() => calculateFullPrice(wagon.wagonId)}
-                        disabled={calculating}
-                      >
-                        Рассчитать стоимость
-                      </button>
+
+                  <div className="wagon-details">
+                    <div className="detail-item">
+                      <div className="detail-label">Грузоподъемность</div>
+                      <div className="detail-value">{wagon.maxWeightKg} кг</div>
+                    </div>
+                    <div className="detail-item">
+                      <div className="detail-label">Объем</div>
+                      <div className="detail-value">{wagon.maxVolumeM3} м³</div>
+                    </div>
+                    <div className="detail-item">
+                      <div className="detail-label">Станция</div>
+                      <div className="detail-value">{wagon.currentStation}</div>
+                    </div>
+                    <div className="detail-item">
+                      <div className="detail-label">Статус</div>
+                      <div className="detail-value">
+                        {wagon.availabilityStatus}
+                      </div>
+                    </div>
+                  </div>
+
+                  {wagon.distanceToStation > 0 && (
+                    <div className="distance-warning">
+                      ⚠️ Вагон на станции {wagon.currentStation} (подача через{" "}
+                      {wagon.estimatedArrivalHours} ч)
+                    </div>
+                  )}
+
+                  {/* Блок с дополнительными услугами */}
+                  {selectedWagon?.wagonId === wagon.wagonId &&
+                    fullPrice &&
+                    fullPrice.availableServices && (
+                      <div className="services-list">
+                        <h4>Дополнительные услуги:</h4>
+
+                        {/* Отображаем все доступные услуги с чекбоксами */}
+                        {fullPrice.availableServices.map((service, idx) => (
+                          <div key={idx} className="service-item">
+                            <input
+                              type="checkbox"
+                              id={`service-${wagon.wagonId}-${service.code}`}
+                              checked={wagonSelectedServices.has(service.code)}
+                              onChange={() =>
+                                handleServiceToggle(wagon.wagonId, service.code)
+                              }
+                              disabled={service.code === "CONSOLIDATION"}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "10px",
+                                  flexWrap: "wrap",
+                                }}
+                              >
+                                <label
+                                  htmlFor={`service-${wagon.wagonId}-${service.code}`}
+                                  style={{ fontWeight: "bold" }}
+                                >
+                                  {service.name}
+                                </label>
+                                <span
+                                  className={`service-category ${getCategoryClass(
+                                    service.category
+                                  )}`}
+                                >
+                                  {getCategoryLabel(service.category)}
+                                </span>
+                                {service.isRecommended && (
+                                  <span className="recommendation-badge">
+                                    Рекомендуем
+                                  </span>
+                                )}
+                              </div>
+                              <div className="service-description">
+                                {service.description}
+                              </div>
+                              {service.recommendationReason && (
+                                <div className="service-reason">
+                                  {service.recommendationReason}
+                                </div>
+                              )}
+                            </div>
+                            <div className="service-price">
+                              {service.price > 0
+                                ? `${service.price.toLocaleString()} ₽`
+                                : "Бесплатно"}
+                              {service.details && (
+                                <small>{service.details}</small>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Кнопка пересчета */}
+                        <div
+                          style={{ padding: "15px 20px", textAlign: "right" }}
+                        >
+                          <button
+                            onClick={() => recalculatePrice(wagon.wagonId)}
+                            disabled={calculating}
+                            className="btn-primary"
+                            style={{ padding: "10px 20px" }}
+                          >
+                            {calculating
+                              ? "Пересчет..."
+                              : "Пересчитать с выбранными услугами"}
+                          </button>
+                        </div>
+
+                        {/* Итоговая стоимость */}
+                        <div className="total-price-row">
+                          <span className="total-price-label">ИТОГО:</span>
+                          <span className="total-price-amount">
+                            {fullPrice.totalPrice.toLocaleString()} ₽
+                          </span>
+                        </div>
+
+                        {/* Информация о грузе */}
+                        {fullPrice.cargoEstimate && (
+                          <div className="cargo-info">
+                            <div className="cargo-info-item">
+                              <span className="cargo-info-label">
+                                Оценка груза:
+                              </span>
+                              <span className="cargo-info-value">
+                                {fullPrice.cargoEstimate.estimatedValue.toLocaleString()}{" "}
+                                ₽
+                              </span>
+                            </div>
+                            <div className="cargo-info-item">
+                              <span className="cargo-info-label">Вес:</span>
+                              <span className="cargo-info-value">
+                                {fullPrice.cargoEstimate.weightTons} тонн
+                              </span>
+                            </div>
+                            <div className="cargo-info-item">
+                              <span className="cargo-info-label">
+                                Уровень риска:
+                              </span>
+                              <span className="cargo-info-value">
+                                {fullPrice.cargoEstimate.riskLevel}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
+
+                  <div className="price-block">
+                    <div>
+                      <span className="price-amount">
+                        {selectedWagon?.wagonId === wagon.wagonId && fullPrice
+                          ? fullPrice.totalPrice.toLocaleString()
+                          : wagon.estimatedPrice?.toLocaleString()}
+                      </span>
+                      <span className="price-currency"> ₽</span>
+                    </div>
+                    <div>
+                      {selectedWagon?.wagonId === wagon.wagonId ? (
+                        <div style={{ display: "flex", gap: "10px" }}>
+                          <button
+                            className="btn-reserve"
+                            onClick={() => reserveWagon(wagon.wagonId)}
+                            disabled={loading}
+                            style={{ background: "#28a745" }}
+                          >
+                            {loading ? "..." : "Оплатить"}
+                          </button>
+                          <button
+                            onClick={() => cancelReservation(wagon.wagonId)}
+                            disabled={loading}
+                            style={{
+                              padding: "12px 24px",
+                              background: "#dc3545",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "5px",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Отменить бронь
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className="btn-reserve"
+                          onClick={() => calculateFullPrice(wagon.wagonId)}
+                          disabled={calculating}
+                        >
+                          {calculating ? "Расчет..." : "Рассчитать стоимость"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
