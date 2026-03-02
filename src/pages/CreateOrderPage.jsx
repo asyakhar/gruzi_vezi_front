@@ -183,40 +183,6 @@ const CreateOrderPage = () => {
     }
   };
 
-<<<<<<< HEAD
-  // ШАГ 4: Резервирование вагона
-  //   const reserveWagon = async (wagonId) => {
-  //     setLoading(true);
-  //     try {
-  //       const token = localStorage.getItem("accessToken");
-
-  //       const response = await fetch(
-  //         `http://localhost:8080/api/dispatcher/wagons/${wagonId}/reserve?orderId=${orderId}&minutes=30`,
-  //         {
-  //           method: "POST",
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //         }
-  //       );
-
-  //       if (!response.ok) throw new Error("Ошибка при резервировании");
-
-  //       const result = await response.text();
-  //       setMessage(` ${result}. Переходите к оплате.`);
-
-  //       // Переход к оплате через 2 секунды
-  //       setTimeout(() => {
-  //         navigate(`/payment/create?orderId=${orderId}&wagonId=${wagonId}`);
-  //       }, 2000);
-  //     } catch (err) {
-  //       setError(err.message);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-=======
->>>>>>> 675a3980a8a15e78e399d0de2b90c0643b15eee3
   const reserveWagon = async (wagonId) => {
     setLoading(true);
     try {
