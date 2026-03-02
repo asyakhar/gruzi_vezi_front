@@ -213,41 +213,6 @@ const MainPage = () => {
             </div>
           </div>
         </section>
-
-        {/* Форма поиска грузоперевозки (ключевая для бизнес-процесса) */}
-        <section className="cargo-search-section">
-          <div className="container">
-            <div className="search-form">
-              <h3 className="search-form-title">Грузовые перевозки</h3>
-              <div className="form-row">
-                <input
-                  type="text"
-                  placeholder="Станция отправления"
-                  className="form-input"
-                />
-                <input
-                  type="text"
-                  placeholder="Станция назначения"
-                  className="form-input"
-                />
-                <input type="date" placeholder="Дата" className="form-input" />
-              </div>
-              <div className="form-row">
-                <input
-                  type="text"
-                  placeholder="Груз (код или наименование)"
-                  className="form-input"
-                />
-                <input
-                  type="number"
-                  placeholder="Вес (т)"
-                  className="form-input"
-                />
-                <button className="btn btn-primary btn-large">Найти</button>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* Подвал */}

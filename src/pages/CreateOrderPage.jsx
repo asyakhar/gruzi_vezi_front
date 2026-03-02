@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./MainPage.css";
 import "./WagonSearchResult.css";
 import { fetchWithAuth } from "../api";
-
+import AutocompleteInput from "./AutocompleteInput";
 const CreateOrderPage = () => {
   const navigate = useNavigate();
 
@@ -183,6 +183,37 @@ const CreateOrderPage = () => {
     }
   };
 
+  // ШАГ 4: Резервирование вагона
+  //   const reserveWagon = async (wagonId) => {
+  //     setLoading(true);
+  //     try {
+  //       const token = localStorage.getItem("accessToken");
+
+  //       const response = await fetch(
+  //         `http://localhost:8080/api/dispatcher/wagons/${wagonId}/reserve?orderId=${orderId}&minutes=30`,
+  //         {
+  //           method: "POST",
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         }
+  //       );
+
+  //       if (!response.ok) throw new Error("Ошибка при резервировании");
+
+  //       const result = await response.text();
+  //       setMessage(` ${result}. Переходите к оплате.`);
+
+  //       // Переход к оплате через 2 секунды
+  //       setTimeout(() => {
+  //         navigate(`/payment/create?orderId=${orderId}&wagonId=${wagonId}`);
+  //       }, 2000);
+  //     } catch (err) {
+  //       setError(err.message);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
   const reserveWagon = async (wagonId) => {
     setLoading(true);
     try {
@@ -317,27 +348,23 @@ const CreateOrderPage = () => {
         >
           <div style={{ display: "flex", gap: "20px" }}>
             <div style={{ flex: 1 }}>
-              <label>Станция отправления *</label>
-              <input
-                type="text"
+              <AutocompleteInput
+                label="Станция отправления"
                 name="departureStation"
                 value={formData.departureStation}
                 onChange={handleChange}
-                className="form-input"
-                required
                 placeholder="Москва-Товарная"
+                required={true}
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label>Станция назначения *</label>
-              <input
-                type="text"
+              <AutocompleteInput
+                label="Станция назначения"
                 name="destinationStation"
                 value={formData.destinationStation}
                 onChange={handleChange}
-                className="form-input"
-                required
                 placeholder="Екатеринбург-Товарный"
+                required={true}
               />
             </div>
           </div>
@@ -449,8 +476,9 @@ const CreateOrderPage = () => {
             {wagons.map((wagon) => (
               <div
                 key={wagon.wagonId}
-                className={`wagon-card ${selectedWagon?.wagonId === wagon.wagonId ? "recommended" : ""
-                  }`}
+                className={`wagon-card ${
+                  selectedWagon?.wagonId === wagon.wagonId ? "recommended" : ""
+                }`}
               >
                 <div className="wagon-header">
                   <span className="wagon-type">
