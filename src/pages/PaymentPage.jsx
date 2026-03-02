@@ -89,19 +89,8 @@ const PaymentPage = () => {
             const orderData = await orderResponse.json();
             console.log("Данные заказа:", orderData);
 
-            let amount = 0;
-            if (orderData.totalPrice) {
-              amount = orderData.totalPrice;
-            } else if (orderData.amount) {
-              amount = orderData.amount;
-            } else {
-              const urlAmount = searchParams.get("amount");
-              if (urlAmount) {
-                amount = parseFloat(urlAmount);
-              }
-            }
-
-            setOrderAmount(Number(amount));
+            const price = orderData.totalPrice || 0;
+            setOrderAmount(Number(price));
           } else {
             console.warn("Не удалось загрузить заказ, берем сумму из URL");
             const urlAmount = searchParams.get("amount");
@@ -127,8 +116,7 @@ const PaymentPage = () => {
     };
 
     loadUserProfile();
-  }, [navigate, orderId, searchParams]);
-
+  }, [navigate, orderId]);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPaymentData({ ...paymentData, [name]: value });
@@ -153,6 +141,8 @@ const PaymentPage = () => {
       if (!orderId) {
         throw new Error("Не указан ID заказа в URL");
       }
+
+      console.log("Тип amount:", typeof orderAmount, "Значение:", orderAmount);
 
       let amountValue = parseFloat(orderAmount);
       if (isNaN(amountValue) || amountValue <= 0) {
