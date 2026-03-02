@@ -101,38 +101,32 @@ const PaymentPage = () => {
           inn: userData.inn,
         }));
 
-        // ===== ИСПРАВЛЕНО: ЗАГРУЗКА ЗАКАЗА =====
         if (orderId) {
-          const orderResponse = await fetch(
-            `http://localhost:8080/api/orders/${orderId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+          const orderResponse = await fetchWithAuth(
+            `http://localhost:8080/api/orders/${orderId}`
           );
 
           if (orderResponse.ok) {
             const orderData = await orderResponse.json();
-            console.log("Данные заказа:", orderData); // Для отладки
+            console.log("Данные заказа:", orderData);
 
-            // Убедимся, что totalPrice - число
             const price = orderData.totalPrice || 0;
             setOrderAmount(Number(price));
           } else {
             console.warn("Не удалось загрузить заказ");
           }
         }
-        // ===== КОНЕЦ ИСПРАВЛЕНИЯ =====
       } catch (err) {
         console.error("Ошибка загрузки профиля:", err);
         setError("Не удалось загрузить данные компании. Возможно, сессия истекла.");
-        setTimeout(() => navigate("/login"), 2000); // Если даже умный запрос не справился - отправляем на логин
+        setTimeout(() => navigate("/login"), 2000);
       } finally {
         setProfileLoading(false);
       }
     };
 
     loadUserProfile();
-  }, [navigate, orderId]); // Добавить orderId в зависимости
+  }, [navigate, orderId]);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPaymentData({ ...paymentData, [name]: value });
@@ -219,14 +213,11 @@ const PaymentPage = () => {
         throw new Error("Не указан ID заказа в URL");
       }
 
-      // ===== ИСПРАВЛЕНО: ПРОВЕРКА СУММЫ =====
       console.log("Тип amount:", typeof orderAmount, "Значение:", orderAmount);
 
-      // Преобразуем в число с двумя знаками после запятой
       let amountValue = parseFloat(orderAmount);
 
       if (isNaN(amountValue) || amountValue <= 0) {
-        // Если сумма не загрузилась, пробуем взять из URL
         const urlAmount = searchParams.get("amount");
         if (urlAmount) {
           amountValue = parseFloat(urlAmount);
@@ -234,11 +225,10 @@ const PaymentPage = () => {
           throw new Error("Не удалось определить сумму платежа");
         }
       }
-      // ===== КОНЕЦ ИСПРАВЛЕНИЯ =====
 
       const payload = {
         orderId: orderId,
-        amount: amountValue, // теперь точно число
+        amount: amountValue,
         companyName: paymentData.companyName,
         inn: paymentData.inn,
         kpp: paymentData.kpp || null,
@@ -255,7 +245,6 @@ const PaymentPage = () => {
         "http://localhost:8080/api/dispatcher/payments/corporate",
         {
           method: "POST",
-          // Content-Type оставляем, чтобы сервер понял, что мы шлем JSON
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
