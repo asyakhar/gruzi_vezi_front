@@ -10,13 +10,13 @@
     padding: 15px;
     margin-bottom: 15px;
     background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s;
 }
 
 .wagon-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .wagon-card.recommended {
@@ -44,10 +44,25 @@
     font-size: 0.9em;
 }
 
-.match-ideal { background: #28a745; color: white; }
-.match-good { background: #17a2b8; color: white; }
-.match-ok { background: #ffc107; color: black; }
-.match-poor { background: #dc3545; color: white; }
+.match-ideal {
+    background: #28a745;
+    color: white;
+}
+
+.match-good {
+    background: #17a2b8;
+    color: white;
+}
+
+.match-ok {
+    background: #ffc107;
+    color: black;
+}
+
+.match-poor {
+    background: #dc3545;
+    color: white;
+}
 
 .wagon-details {
     display: grid;
@@ -96,7 +111,6 @@
 .services-list {
     margin: 10px 0;
     padding: 10px;
-    background: #e8f4fd;
     border-radius: 5px;
 }
 

@@ -6,19 +6,16 @@ import "./MainPage.css";
 const ProfilePage = () => {
   const navigate = useNavigate();
 
-  // Состояния для хранения данных
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all"); // Фильтр по статусу
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  // Загружаем данные при открытии страницы
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        // 1. Запрашиваем инфу о пользователе
         const userResponse = await fetchWithAuth(
           "http://localhost:8080/api/user/me"
         );
@@ -26,7 +23,6 @@ const ProfilePage = () => {
         const userData = await userResponse.json();
         setUser(userData);
 
-        // 2. Запрашиваем список заявок
         const ordersResponse = await fetchWithAuth(
           "http://localhost:8080/api/orders"
         );
@@ -34,7 +30,7 @@ const ProfilePage = () => {
           throw new Error("Не удалось загрузить список заявок");
         const ordersData = await ordersResponse.json();
         setOrders(ordersData);
-        setFilteredOrders(ordersData); // Изначально показываем все
+        setFilteredOrders(ordersData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -45,7 +41,6 @@ const ProfilePage = () => {
     fetchProfileData();
   }, []);
 
-  // Фильтрация заявок при изменении фильтра или списка заказов
   useEffect(() => {
     if (statusFilter === "all") {
       setFilteredOrders(orders);
@@ -55,7 +50,6 @@ const ProfilePage = () => {
     }
   }, [statusFilter, orders]);
 
-  // Функция для красивого вывода статуса
   const getStatusBadge = (status) => {
     switch (status) {
       case "черновик":
@@ -123,22 +117,22 @@ const ProfilePage = () => {
             Доставлен
           </span>
         );
-      default:
+      case "оплачен":
         return (
           <span
             style={{
-              background: "#e2e3e5",
+              background: "rgb(54, 230, 92)",
+              color: "white",
               padding: "4px 8px",
               borderRadius: "4px",
             }}
           >
-            {status}
+            Оплачен
           </span>
         );
     }
   };
 
-  // Получение статистики по статусам
   const getStatusStats = () => {
     const stats = {
       all: orders.length,

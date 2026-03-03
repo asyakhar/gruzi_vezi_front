@@ -346,7 +346,7 @@ const PaymentPage = () => {
                   alignItems: "center",
                 }}
               >
-                <span>⏳ Вагон забронирован на 30 минут</span>
+                <span>Вагон забронирован на 30 минут</span>
                 <button
                   onClick={cancelReservation}
                   style={{
@@ -552,9 +552,10 @@ const PaymentPage = () => {
                   ></button>
                 </div>
               </div>
-
+              <h3>Подпишите договор и пришлите на нашу корпоративную почту rzd@mail.ru</h3>
               <div
                 style={{
+                  marginTop: "20px",
                   display: "flex",
                   gap: "20px",
                   justifyContent: "center",
