@@ -28,7 +28,6 @@ const PaymentPage = () => {
   const [error, setError] = useState(null);
   const [createdPayment, setCreatedPayment] = useState(null);
 
-  // Функция отмены брони - вызывается ТОЛЬКО по кнопке или при ошибке
   const cancelReservation = async () => {
     console.log("Отмена брони по запросу пользователя", {
       wagonId,
@@ -181,7 +180,6 @@ const PaymentPage = () => {
       );
 
       if (!response.ok) {
-        // ТОЛЬКО ПРИ ОШИБКЕ - отменяем бронь
         await cancelReservation();
 
         const errorText = await response.text();
@@ -191,8 +189,6 @@ const PaymentPage = () => {
       const data = await response.json();
       setCreatedPayment(data);
       setMessage(`✓ Платеж успешно создан!`);
-
-      // НИЧЕГО НЕ ОТМЕНЯЕМ ПРИ УСПЕХЕ!
     } catch (err) {
       console.error("Ошибка:", err);
       setError(err.message);
@@ -272,7 +268,6 @@ const PaymentPage = () => {
             <span className="logo-text">ОАО «РЖД» | Оплата перевозки</span>
           </div>
           <div style={{ display: "flex", gap: "10px" }}>
-            {/* Кнопка отмены брони - видна всегда, пока платеж не создан */}
             {!createdPayment && (
               <button
                 onClick={cancelReservation}
@@ -332,7 +327,6 @@ const PaymentPage = () => {
 
           {!createdPayment ? (
             <>
-              {/* Информация о бронировании */}
               <div
                 style={{
                   background: "#fff3cd",
@@ -552,7 +546,10 @@ const PaymentPage = () => {
                   ></button>
                 </div>
               </div>
-              <h3>Подпишите договор и пришлите на нашу корпоративную почту rzd@mail.ru</h3>
+              <h3>
+                Подпишите договор и пришлите на нашу корпоративную почту
+                rzd@mail.ru
+              </h3>
               <div
                 style={{
                   marginTop: "20px",

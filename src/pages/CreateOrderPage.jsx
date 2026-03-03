@@ -27,10 +27,8 @@ const CreateOrderPage = () => {
   const [loading, setLoading] = useState(false);
   const [calculating, setCalculating] = useState(false);
 
-  // Храним выбранные услуги отдельно для каждого вагона
   const [selectedServicesByWagon, setSelectedServicesByWagon] = useState({});
 
-  // Таймер для debounce запросов
   const [priceCalcTimer, setPriceCalcTimer] = useState(null);
 
   const handleChange = (e) => {
@@ -38,9 +36,7 @@ const CreateOrderPage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Обработчик выбора услуги (чекбокс) - БЕЗ АВТОМАТИЧЕСКОГО ПЕРЕСЧЕТА
   const handleServiceToggle = (wagonId, serviceCode) => {
-    // Обновляем состояние выбранных услуг для конкретного вагона
     setSelectedServicesByWagon((prev) => {
       const wagonServices = prev[wagonId] || new Set();
       const newSet = new Set(wagonServices);
@@ -76,7 +72,6 @@ const CreateOrderPage = () => {
       setSelectedWagon(null);
       setFullPrice(null);
 
-      // Обновляем список вагонов
       await searchWagons(orderId);
     } catch (err) {
       setError(err.message);
@@ -85,7 +80,6 @@ const CreateOrderPage = () => {
     }
   };
 
-  // Функция для пересчета цены (вызывается по кнопке)
   const recalculatePrice = async (wagonId) => {
     if (!orderId || !wagonId) return;
 
@@ -115,7 +109,6 @@ const CreateOrderPage = () => {
 
       setFullPrice(data);
 
-      // Находим выбранный вагон
       const wagon = wagons.find((w) => w.wagonId === wagonId);
       setSelectedWagon({ ...wagon, price: data });
     } catch (err) {
@@ -125,7 +118,6 @@ const CreateOrderPage = () => {
     }
   };
 
-  // ШАГ 1: Создание заявки
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(null);
@@ -183,7 +175,6 @@ const CreateOrderPage = () => {
         `✓ Заявка №${newOrderId.slice(0, 8)} создана! Ищем подходящие вагоны...`
       );
 
-      // ШАГ 2: Автоматически ищем вагоны после создания заявки
       await searchWagons(newOrderId);
     } catch (err) {
       setError(err.message);
@@ -193,7 +184,6 @@ const CreateOrderPage = () => {
     }
   };
 
-  // ШАГ 2: Поиск вагонов
   const searchWagons = async (orderId) => {
     setCalculating(true);
     try {
@@ -239,7 +229,6 @@ const CreateOrderPage = () => {
     }
   };
 
-  // ШАГ 3: Первоначальный расчет стоимости (при выборе вагона)
   const calculateFullPrice = async (wagonId) => {
     setCalculating(true);
     try {
@@ -267,7 +256,6 @@ const CreateOrderPage = () => {
 
       setFullPrice(data);
 
-      // Находим выбранный вагон
       const wagon = wagons.find((w) => w.wagonId === wagonId);
       setSelectedWagon({ ...wagon, price: data });
     } catch (err) {
@@ -277,59 +265,11 @@ const CreateOrderPage = () => {
     }
   };
 
-  // ШАГ 4: Резервирование вагона
-  // const reserveWagon = async (wagonId) => {
-  //   setLoading(true);
-  //   try {
-  //     const token = localStorage.getItem("accessToken");
-
-  //     // 1. Сначала резервируем вагон
-  //     const reserveResponse = await fetch(
-  //       `http://localhost:8080/api/dispatcher/wagons/${wagonId}/reserve?orderId=${orderId}&minutes=30`,
-  //       {
-  //         method: "POST",
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     );
-
-  //     if (!reserveResponse.ok) throw new Error("Ошибка при резервировании");
-
-  //     // 2. СОХРАНЯЕМ ВЫБРАННЫЙ ВАГОН И ЦЕНУ В ЗАКАЗ
-  //     const confirmResponse = await fetch(
-  //       `http://localhost:8080/api/orders/${orderId}/confirm-wagon?wagonId=${wagonId}&totalPrice=${fullPrice.totalPrice}`,
-  //       {
-  //         method: "POST",
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     );
-
-  //     if (!confirmResponse.ok) {
-  //       const errorText = await confirmResponse.text();
-  //       console.error("Ошибка подтверждения:", errorText);
-  //       throw new Error("Не удалось сохранить данные в заказ");
-  //     }
-
-  //     const result = await reserveResponse.text();
-  //     setMessage(`✓ ${result}. Переходите к оплате.`);
-
-  //     // Переход к оплате с параметрами
-  //     setTimeout(() => {
-  //       navigate(
-  //         `/payment/create?orderId=${orderId}&wagonId=${wagonId}&amount=${fullPrice.totalPrice}`
-  //       );
-  //     }, 2000);
-  //   } catch (err) {
-  //     setError(err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const reserveWagon = async (wagonId) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
 
-      // 1. Резервируем вагон
       const reserveResponse = await fetch(
         `http://localhost:8080/api/dispatcher/wagons/${wagonId}/reserve?orderId=${orderId}&minutes=30`,
         {
@@ -340,7 +280,6 @@ const CreateOrderPage = () => {
 
       if (!reserveResponse.ok) throw new Error("Ошибка при резервировании");
 
-      // 2. Сохраняем в заказе
       const confirmResponse = await fetch(
         `http://localhost:8080/api/orders/${orderId}/confirm-wagon?wagonId=${wagonId}&totalPrice=${fullPrice.totalPrice}`,
         {
@@ -350,7 +289,6 @@ const CreateOrderPage = () => {
       );
 
       if (!confirmResponse.ok) {
-        // Если не удалось сохранить - отменяем бронь
         await fetch(
           `http://localhost:8080/api/dispatcher/wagons/${wagonId}/release`,
           {
@@ -363,7 +301,6 @@ const CreateOrderPage = () => {
 
       setMessage(`✓ Вагон забронирован. Переходите к оплате.`);
 
-      // Переход к оплате
       navigate(
         `/payment/create?orderId=${orderId}&wagonId=${wagonId}&amount=${fullPrice.totalPrice}`
       );
@@ -380,7 +317,6 @@ const CreateOrderPage = () => {
     return "match-poor";
   };
 
-  // Функция для получения текстовой метки категории
   const getCategoryLabel = (category) => {
     const labels = {
       SAFETY: "Безопасность",
@@ -391,7 +327,6 @@ const CreateOrderPage = () => {
     return labels[category] || "Услуга";
   };
 
-  // Функция для получения класса категории
   const getCategoryClass = (category) => {
     const classes = {
       SAFETY: "safety",
@@ -402,7 +337,6 @@ const CreateOrderPage = () => {
     return classes[category] || "";
   };
 
-  // Получаем выбранные услуги для текущего вагона
   const getSelectedServicesForWagon = (wagonId) => {
     return selectedServicesByWagon[wagonId] || new Set();
   };
@@ -617,10 +551,11 @@ const CreateOrderPage = () => {
               return (
                 <div
                   key={wagon.wagonId}
-                  className={`wagon-card ${selectedWagon?.wagonId === wagon.wagonId
+                  className={`wagon-card ${
+                    selectedWagon?.wagonId === wagon.wagonId
                       ? "recommended"
                       : ""
-                    }`}
+                  }`}
                 >
                   <div className="wagon-header">
                     <span className="wagon-type">

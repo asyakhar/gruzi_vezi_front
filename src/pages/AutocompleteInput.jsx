@@ -66,25 +66,22 @@ const AutocompleteInput = ({
     const newValue = e.target.value;
     setInputValue(newValue);
 
-    // Создаем новое событие с правильным значением
     const customEvent = {
       target: {
         name: name,
         value: newValue,
       },
     };
-    onChange(customEvent); // Передаем кастомное событие
+    onChange(customEvent);
 
     setShowSuggestions(true);
   };
   const handleSuggestionClick = (station) => {
-    // station может быть объектом или строкой
     const stationName = typeof station === "object" ? station.name : station;
 
     setInputValue(stationName);
     setShowSuggestions(false);
 
-    // Создаем событие для формы
     const event = {
       target: {
         name: name,

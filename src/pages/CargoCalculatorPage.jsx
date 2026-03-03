@@ -1,30 +1,25 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MainPage.css";
-import "./CalculatorPage.css"; // Создадим отдельный CSS для калькулятора
+import "./CalculatorPage.css";
 import AutocompleteInput from "./AutocompleteInput";
 const CargoCalculatorPage = () => {
   const navigate = useNavigate();
 
-  // Состояние для шагов
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Состояние для данных формы
   const [formData, setFormData] = useState({
-    // Шаг 1: Маршрут
     departureStation: "",
     destinationStation: "",
 
-    // Шаг 2: Параметры перевозки
     cargoType: "Электроника",
     weightKg: "",
     volumeM3: "",
     packagingType: "Паллеты",
     wagonType: "крытый",
-    ownership: "Парк РЖД", // Принадлежность
+    ownership: "Парк РЖД",
   });
 
-  // Состояние для результатов расчета
   const [calculationResult, setCalculationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -34,16 +29,13 @@ const CargoCalculatorPage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Переход к следующему шагу
   const nextStep = () => {
     if (currentStep === 1) {
-      // Валидация шага 1
       if (!formData.departureStation || !formData.destinationStation) {
         setError("Заполните станции отправления и назначения");
         return;
       }
     } else if (currentStep === 2) {
-      // Валидация шага 2
       if (!formData.weightKg || !formData.volumeM3) {
         setError("Заполните вес и объем груза");
         return;
@@ -53,19 +45,16 @@ const CargoCalculatorPage = () => {
     setCurrentStep(currentStep + 1);
   };
 
-  // Возврат к предыдущему шагу
   const prevStep = () => {
     setError(null);
     setCurrentStep(currentStep - 1);
   };
 
-  // Расчет стоимости и углеродного следа
   const calculatePrice = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Используем твой существующий эндпоинт для расчета
       const payload = {
         cargoType: formData.cargoType,
         wagonType: formData.wagonType,
@@ -89,17 +78,16 @@ const CargoCalculatorPage = () => {
 
       const data = await response.json();
 
-      // Добавляем углеродный след к результату (он уже должен быть в ответе)
       setCalculationResult({
         ...data,
-        // Если углеродного следа нет в ответе, рассчитываем приблизительно
+
         carbonFootprint:
           data.carbonFootprintKg ||
           (
             (formData.weightKg * (data.distanceKm || 1000) * 0.02) /
             1000
           ).toFixed(2),
-        // Добавляем сравнение с автотранспортом
+
         truckCarbonFootprint: (
           (formData.weightKg * (data.distanceKm || 1000) * 0.12) /
           1000
@@ -112,7 +100,6 @@ const CargoCalculatorPage = () => {
     }
   };
 
-  // Обработка отправки формы
   const handleSubmit = (e) => {
     e.preventDefault();
     if (currentStep === 3) {
@@ -122,7 +109,6 @@ const CargoCalculatorPage = () => {
     }
   };
 
-  // Сброс и начало нового расчета
   const resetCalculator = () => {
     setCurrentStep(1);
     setCalculationResult(null);
@@ -138,7 +124,6 @@ const CargoCalculatorPage = () => {
     });
   };
 
-  // Прогресс-бар шагов
   const renderProgressBar = () => {
     return (
       <div className="calculator-progress">
@@ -172,7 +157,6 @@ const CargoCalculatorPage = () => {
     );
   };
 
-  // Шаг 1: Маршрут
   const renderStep1 = () => (
     <div className="calculator-step">
       <h3 className="step-title">Шаг 1: Маршрут перевозки</h3>
@@ -201,7 +185,6 @@ const CargoCalculatorPage = () => {
     </div>
   );
 
-  // Шаг 2: Параметры перевозки
   const renderStep2 = () => (
     <div className="calculator-step">
       <h3 className="step-title">Шаг 2: Параметры перевозки</h3>
@@ -308,7 +291,6 @@ const CargoCalculatorPage = () => {
     </div>
   );
 
-  // Шаг 3: Результаты расчета
   const renderStep3 = () => (
     <div className="calculator-step">
       <h3 className="step-title">Шаг 3: Результаты расчета</h3>

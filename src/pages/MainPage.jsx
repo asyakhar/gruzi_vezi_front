@@ -5,10 +5,8 @@ import "./MainPage.css";
 const MainPage = () => {
   const navigate = useNavigate();
 
-  // 1. Создаем состояние: залогинен ли пользователь (по умолчанию false)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // 2. Проверяем наличие токена при загрузке страницы
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (token) {
@@ -16,11 +14,9 @@ const MainPage = () => {
     }
   }, []);
 
-  // 3. Функция для выхода из аккаунта
   const handleLogout = async () => {
     const refreshToken = localStorage.getItem("refreshToken");
 
-    // Если на бэкенде работает эндпоинт логаута (для очистки Redis) - вызываем его
     if (refreshToken) {
       try {
         await fetch("http://localhost:8080/api/auth/logout", {
@@ -33,27 +29,21 @@ const MainPage = () => {
       }
     }
 
-    // В любом случае удаляем токены из памяти браузера
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
 
-    // Меняем состояние, чтобы шапка сайта обновилась
     setIsLoggedIn(false);
     alert("Вы успешно вышли из аккаунта");
   };
 
-  // Функция для проверки авторизации при клике на оформление заявки
   const handleOrderClick = (e) => {
-    e.preventDefault(); // Останавливаем стандартный переход по ссылке
+    e.preventDefault();
 
-    // Проверяем, есть ли токен в памяти браузера
     const token = localStorage.getItem("accessToken");
 
     if (token) {
-      // Если токен есть, пускаем на страницу заявки
       navigate("/create-order");
     } else {
-      // Если токена нет, просим войти
       alert("Для оформления заявки необходимо войти в аккаунт.");
       navigate("/login");
     }
@@ -106,12 +96,10 @@ const MainPage = () => {
           </nav>
           <div className="header-actions">
             {isLoggedIn ? (
-              // Если пользователь залогинен, показываем только эту кнопку
               <button className="btn btn-outline" onClick={handleLogout}>
                 Выйти
               </button>
             ) : (
-              // Если НЕ залогинен, показываем эти две
               <>
                 <button
                   className="btn btn-outline"
@@ -131,9 +119,7 @@ const MainPage = () => {
         </div>
       </header>
 
-      {/* Основной контент */}
       <main>
-        {/* Блок с юбилеем */}
         <section className="anniversary-section">
           <div className="container">
             <div className="anniversary-content">
@@ -149,7 +135,6 @@ const MainPage = () => {
           </div>
         </section>
 
-        {/* Блок с функциями личного кабинета */}
         <section className="features-section">
           <div className="container">
             <h2 className="section-title">
@@ -157,7 +142,6 @@ const MainPage = () => {
             </h2>
 
             <div className="features-grid">
-              {/* Карточка 1 - Калькулятор */}
               <div className="feature-card">
                 <h3 className="feature-title">Калькулятор</h3>
                 <p className="feature-description">
@@ -168,25 +152,12 @@ const MainPage = () => {
                 </Link>
               </div>
 
-              {/* Карточка 2 - Интерактивная карта
-              <div className="feature-card">
-                <h3 className="feature-title">Интерактивная карта</h3>
-                <p className="feature-description">
-                  Получите информацию об объектах инфраструктуры ОАО «РЖД»,
-                  загруженности участков дорог и портов.
-                </p>
-                <a href="#" className="feature-link">
-                  Открыть карту →
-                </a>
-              </div> */}
-
-              {/* Карточка 3 - Справочники */}
               <div className="feature-card">
                 <h3 className="feature-title">Оформление заявки</h3>
                 <p className="feature-description">
                   Воспользуйтесь удобным инструментом для оформления заявки.
                 </p>
-                {/* Меняем ссылку на кнопку/ссылку с нашим перехватчиком onClick */}
+
                 <a
                   onClick={handleOrderClick}
                   className="feature-link"
@@ -196,7 +167,6 @@ const MainPage = () => {
                 </a>
               </div>
 
-              {/* Карточка 3 - О кабинете */}
               <div className="feature-card">
                 <h3 className="feature-title">Личный кабинет</h3>
                 <p className="feature-description">
@@ -215,7 +185,6 @@ const MainPage = () => {
         </section>
       </main>
 
-      {/* Подвал */}
       <footer className="footer">
         <div className="container">
           <div className="footer-content">
