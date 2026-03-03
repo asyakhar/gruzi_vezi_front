@@ -30,7 +30,7 @@ const PaymentPage = () => {
 
   // Функция отмены брони - вызывается ТОЛЬКО по кнопке или при ошибке
   const cancelReservation = async () => {
-    console.log("🟡 Отмена брони по запросу пользователя", {
+    console.log("Отмена брони по запросу пользователя", {
       wagonId,
       orderId,
     });
@@ -48,14 +48,14 @@ const PaymentPage = () => {
       );
 
       if (response.ok) {
-        console.log("✅ Вагон освобожден");
-        setMessage("✓ Бронь отменена. Вы можете вернуться к выбору вагона.");
+        console.log("Вагон освобожден");
+        setMessage("Бронь отменена. Вы можете вернуться к выбору вагона.");
         setTimeout(() => {
           navigate(`/create-order?orderId=${orderId}`);
         }, 2000);
       }
     } catch (err) {
-      console.error("❌ Ошибка:", err);
+      console.error("Ошибка:", err);
       setError("Не удалось отменить бронь");
     }
   };
@@ -549,9 +549,7 @@ const PaymentPage = () => {
                       cursor: "pointer",
                       color: copied ? "#28a745" : "#0066cc",
                     }}
-                  >
-                    {copied ? "✓" : "📋"}
-                  </button>
+                  ></button>
                 </div>
               </div>
 
