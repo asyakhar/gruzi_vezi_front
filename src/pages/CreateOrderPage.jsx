@@ -705,11 +705,11 @@ const CreateOrderPage = () => {
                                 >
                                   {getCategoryLabel(service.category)}
                                 </span>
-                                {service.isRecommended && (
+                                {/* {service.isRecommended && (
                                   <span className="recommendation-badge">
                                     Рекомендуем
                                   </span>
-                                )}
+                                )} */}
                               </div>
                               <div className="service-description">
                                 {service.description}

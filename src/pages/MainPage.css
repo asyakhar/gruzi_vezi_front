@@ -822,7 +822,7 @@ select.form-input:focus {
 }
 
 .service-reason::before {
-  content: "⭐";
+  content: "";
   font-size: 11px;
   margin-right: 4px;
 }

@@ -65,10 +65,18 @@ const AutocompleteInput = ({
   const handleInputChange = (e) => {
     const newValue = e.target.value;
     setInputValue(newValue);
-    onChange(e);
+
+    // Создаем новое событие с правильным значением
+    const customEvent = {
+      target: {
+        name: name,
+        value: newValue,
+      },
+    };
+    onChange(customEvent); // Передаем кастомное событие
+
     setShowSuggestions(true);
   };
-
   const handleSuggestionClick = (station) => {
     // station может быть объектом или строкой
     const stationName = typeof station === "object" ? station.name : station;
@@ -105,7 +113,7 @@ const AutocompleteInput = ({
           className="form-input"
           autoComplete="off"
         />
-        {loading && <span className="autocomplete-loader">🔍</span>}
+        {loading && <span className="autocomplete-loader"></span>}
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
