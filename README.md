@@ -1,16 +1,97 @@
-# React + Vite
+# Информационная система «Грузи Вези» (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
+![React Router](https://img.shields.io/badge/React_Router-7-CA4245?logo=react-router&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6-F7DF1E?logo=javascript&logoColor=black)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
 
-Currently, two official plugins are available:
+**Грузи Вези (Frontend)** — это клиентская часть платформы для автоматизации грузовых железнодорожных перевозок. Приложение предоставляет современный интерфейс для взаимодействия грузоотправителей с серверной системой, позволяя быстро оформлять заявки, рассчитывать стоимость и управлять перевозками.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Организация железнодорожной перевозки часто сопряжена с разрозненным поиском вагонов, сложностями расчета тарифов и потерей информации о заказах.
 
-## React Compiler
+Наш сервис устраняет эти проблемы:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Централизация данных:** Единый интерфейс для управления всеми заявками и перевозками.
+- **Упрощение поиска:** Интеллектуальный подбор вагонов с визуальным отображением параметров.
+- **Прозрачные расчеты:** Мгновенный расчет стоимости с учетом всех параметров перевозки.
 
-## Expanding the ESLint configuration
+## Ключевой функционал
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 1. Интеллектуальный поиск и резервирование вагонов
+
+Реализован модуль поиска подвижного состава с визуальным отображением всех параметров. Пользователь видит грузоподъемность, объем, текущее местоположение вагона и процент соответствия его характеристик заявке.
+
+- **Визуальная индикация:** Цветовая маркировка рекомендаций (зеленый — идеально, желтый — хорошо, красный — не рекомендуется).
+- **Автодополнение станций:** Поиск станций с подсказками при вводе названия.
+- **Резервирование:** Временная блокировка выбранного вагона с отображением таймера.
+
+### 2. Расчет стоимости перевозки
+
+- **Калькулятор:** Пошаговый расчет с выбором маршрута, типа груза и вагона.
+- **Дополнительные услуги:** Динамический расчет и выбор услуг (страхование, сопровождение, терминальная обработка).
+- **Экологичность:** Расчет углеродного следа с визуальным сравнением с автотранспортом.
+- **Мгновенный пересчет:** Обновление стоимости при изменении выбранных услуг.
+
+### 3. Корпоративные платежи и документооборот
+
+- **Платежные реквизиты:** Автоматическая подстановка данных компании из профиля.
+- **Генерация PDF:** Скачивание счета и договора после успешной оплаты.
+- **Копирование номера:** Удобное копирование номера платежного документа в буфер обмена.
+
+### 4. Безопасность и управление доступом
+
+- **JWT аутентификация:** Автоматическое обновление токенов через interceptor.
+- **Ролевая модель:** Разделение функционала для авторизованных и неавторизованных пользователей.
+- **Защита маршрутов:** Перенаправление на страницу входа при отсутствии токена.
+
+## Архитектура и Технологический стек
+
+Проект построен по принципам SPA (Single Page Application) с использованием современных инструментов фронтенд-разработки.
+
+- **Frontend:** React 19, React Router 7.
+- **Сборка:** Vite 7.
+- **Стилизация:** CSS3 (модульная структура, корпоративный дизайн).
+- **HTTP-клиент:** Fetch API с кастомным interceptor для работы с токенами.
+- **Компоненты:** Функциональные компоненты с хуками (useState, useEffect, useRef).
+
+## Структура проекта
+
+```
+src/
+├── api.js                 # Кастомный fetch с обработкой токенов
+├── App.jsx                # Главный компонент с маршрутизацией
+├── pages/                 # Страницы приложения
+│   ├── MainPage.jsx       # Главная страница
+│   ├── LoginPage.jsx      # Вход в систему
+│   ├── RegisterPage.jsx   # Регистрация
+│   ├── ProfilePage.jsx    # Личный кабинет с заявками
+│   ├── CreateOrderPage.jsx # Создание заявки и поиск вагонов
+│   ├── PaymentPage.jsx    # Оплата перевозки
+│   ├── CargoCalculatorPage.jsx # Калькулятор стоимости
+│   ├── AutocompleteInput.jsx    # Автодополнение станций
+│   └── *.css              # Стили компонентов
+└── index.css              # Глобальные стили
+```
+
+## Установка
+
+```bash
+# Клонирование репозитория
+git clone https://github.com/dsbnd/Gruzi-vezi
+cd gruzi_vezi_front
+
+# Установка зависимостей
+npm install
+
+# Запуск в режиме разработки
+npm run dev
+
+# Сборка для продакшена
+npm run build
+
+# Предпросмотр собранного приложения
+npm run preview
+```
+
+Приложение будет доступно по адресу: `http://localhost:5173`
