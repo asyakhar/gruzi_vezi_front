@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MainPage.css";
 import "./CalculatorPage.css";
+import API_CONFIG from "../config";
+
 import AutocompleteInput from "./AutocompleteInput";
 const CargoCalculatorPage = () => {
   const navigate = useNavigate();
@@ -64,7 +66,7 @@ const CargoCalculatorPage = () => {
       };
 
       const response = await fetch(
-        "http://localhost:8080/api/dispatcher/pricing/calculate",
+        `${API_CONFIG.baseURL}/api/dispatcher/pricing/calculate`,
         {
           method: "POST",
           headers: {

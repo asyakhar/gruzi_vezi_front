@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./AutocompleteInput.css";
-
+import API_CONFIG from "../config";
 const AutocompleteInput = ({
   value,
   onChange,
@@ -34,9 +34,9 @@ const AutocompleteInput = ({
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:8080/api/stations/search-free?query=${encodeURIComponent(
-          query
-        )}`
+        `${
+          API_CONFIG.baseURL
+        }/api/stations/search-free?query=${encodeURIComponent(query)}`
       );
 
       if (!response.ok) throw new Error("Ошибка поиска станций");

@@ -4,6 +4,7 @@ import "./MainPage.css";
 import "./WagonSearchResult.css";
 import { fetchWithAuth } from "../api";
 import AutocompleteInput from "./AutocompleteInput";
+import API_CONFIG from "../config";
 
 const CreateOrderPage = () => {
   const navigate = useNavigate();
@@ -141,7 +142,7 @@ const CreateOrderPage = () => {
     };
 
     try {
-      const response = await fetchWithAuth("http://localhost:8080/api/orders", {
+      const response = await fetchWithAuth(`${API_CONFIG.baseURL}/api/orders`, {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -201,7 +202,7 @@ const CreateOrderPage = () => {
       };
 
       const response = await fetch(
-        "http://localhost:8080/api/dispatcher/wagons/search",
+        `${API_CONFIG.baseURL}/api/dispatcher/wagons/search`,
         {
           method: "POST",
           headers: {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import API_CONFIG from "../config";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ const RegisterPage = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/api/auth/register", {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
