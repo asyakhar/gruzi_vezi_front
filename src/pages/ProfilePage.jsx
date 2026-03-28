@@ -7,6 +7,8 @@ const ProfilePage = () => {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
+  const [userType, setUserType] = useState(null);
+  const [fullProfile, setFullProfile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,10 +18,20 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
+        const profileResponse = await fetchWithAuth(
+          "http://localhost:8080/api/user/profile"
+        );
+        if (!profileResponse.ok)
+          throw new Error("Не удалось загрузить профиль");
+        const profileData = await profileResponse.json();
+        setFullProfile(profileData);
+        setUserType(profileData.userType);
+
         const userResponse = await fetchWithAuth(
           "http://localhost:8080/api/user/me"
         );
-        if (!userResponse.ok) throw new Error("Не удалось загрузить профиль");
+        if (!userResponse.ok)
+          throw new Error("Не удалось загрузить данные пользователя");
         const userData = await userResponse.json();
         setUser(userData);
 
@@ -121,13 +133,26 @@ const ProfilePage = () => {
         return (
           <span
             style={{
-              background: "rgb(54, 230, 92)",
+              background: "#28a745",
               color: "white",
               padding: "4px 8px",
               borderRadius: "4px",
             }}
           >
             Оплачен
+          </span>
+        );
+      default:
+        return (
+          <span
+            style={{
+              background: "#6c757d",
+              color: "white",
+              padding: "4px 8px",
+              borderRadius: "4px",
+            }}
+          >
+            {status}
           </span>
         );
     }
@@ -138,12 +163,182 @@ const ProfilePage = () => {
       all: orders.length,
       черновик: orders.filter((o) => o.status === "черновик").length,
       поиск_вагона: orders.filter((o) => o.status === "поиск_вагона").length,
+      ожидает_оплаты: orders.filter((o) => o.status === "ожидает_оплаты")
+        .length,
       оплачен: orders.filter((o) => o.status === "оплачен").length,
+      в_пути: orders.filter((o) => o.status === "в_пути").length,
+      доставлен: orders.filter((o) => o.status === "доставлен").length,
     };
     return stats;
   };
 
-  const stats = getStatusStats();
+  const orderStats = getStatusStats();
+
+  const renderUserInfo = () => {
+    if (userType === "LEGAL_ENTITY") {
+      return (
+        <div
+          style={{
+            background: "#f8f9fa",
+            padding: "20px",
+            borderRadius: "8px",
+            border: "1px solid #dee2e6",
+          }}
+        >
+          <h3 style={{ marginBottom: "15px", color: "#e21a1a" }}>
+            Информация о компании
+          </h3>
+          <p>
+            <strong>Название компании:</strong>{" "}
+            {fullProfile?.companyName || user?.companyName}
+          </p>
+          <p>
+            <strong>ИНН:</strong> {fullProfile?.inn || user?.inn}
+          </p>
+          <p>
+            <strong>Email:</strong> {user?.email}
+          </p>
+          <p>
+            <strong>Тип аккаунта:</strong> Юридическое лицо
+          </p>
+        </div>
+      );
+    } else {
+      return (
+        <div
+          style={{
+            background: "#f8f9fa",
+            padding: "20px",
+            borderRadius: "8px",
+            border: "1px solid #dee2e6",
+          }}
+        >
+          <h3 style={{ marginBottom: "15px", color: "#e21a1a" }}>
+            Личная информация
+          </h3>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "15px",
+            }}
+          >
+            <div>
+              <strong>Фамилия:</strong> {fullProfile?.lastName || "—"}
+            </div>
+            <div>
+              <strong>Имя:</strong> {fullProfile?.firstName || "—"}
+            </div>
+            <div>
+              <strong>Отчество:</strong> {fullProfile?.patronymic || "—"}
+            </div>
+            <div>
+              <strong>Телефон:</strong> {fullProfile?.phone || "—"}
+            </div>
+            <div>
+              <strong>Email:</strong> {user?.email}
+            </div>
+            <div>
+              <strong>ИНН:</strong> {fullProfile?.inn || "—"}
+            </div>
+            <div>
+              <strong>СНИЛС:</strong> {fullProfile?.snils || "—"}
+            </div>
+            <div>
+              <strong>Тип аккаунта:</strong> Физическое лицо
+            </div>
+          </div>
+
+          <hr style={{ margin: "15px 0", borderColor: "#dee2e6" }} />
+
+          <h4 style={{ marginBottom: "10px", color: "#e21a1a" }}>
+            Паспортные данные
+          </h4>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "10px",
+            }}
+          >
+            <div>
+              <strong>Серия:</strong> {fullProfile?.passportSeries || "—"}
+            </div>
+            <div>
+              <strong>Номер:</strong> {fullProfile?.passportNumber || "—"}
+            </div>
+            <div>
+              <strong>Кем выдан:</strong> {fullProfile?.passportIssuedBy || "—"}
+            </div>
+            <div>
+              <strong>Дата выдачи:</strong>{" "}
+              {fullProfile?.passportIssuedDate || "—"}
+            </div>
+          </div>
+
+          <hr style={{ margin: "15px 0", borderColor: "#dee2e6" }} />
+
+          <h4 style={{ marginBottom: "10px", color: "#e21a1a" }}>
+            Адрес регистрации
+          </h4>
+          <p>{fullProfile?.registrationAddress || "—"}</p>
+        </div>
+      );
+    }
+  };
+
+  const renderActionButtons = () => {
+    if (userType === "LEGAL_ENTITY") {
+      return (
+        <div style={{ display: "flex", gap: "15px", marginBottom: "30px" }}>
+          <button
+            onClick={() => navigate("/create-order")}
+            className="btn btn-primary"
+          >
+            Создать новую заявку
+          </button>
+          <button
+            onClick={() => navigate("/calculator")}
+            className="btn btn-outline"
+          >
+            Калькулятор стоимости
+          </button>
+        </div>
+      );
+    } else {
+      return (
+        <div
+          style={{
+            display: "flex",
+            gap: "15px",
+            marginBottom: "30px",
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            onClick={() => navigate("/create-order")}
+            className="btn btn-primary"
+          >
+            Создать новую заявку
+          </button>
+          <button
+            onClick={() => navigate("/calculator")}
+            className="btn btn-outline"
+          >
+            Калькулятор стоимости
+          </button>
+          <button
+            onClick={() => window.open("https://www.nalog.gov.ru", "_blank")}
+            className="btn btn-outline"
+            style={{ borderColor: "#28a745", color: "#28a745" }}
+          >
+            Проверить ИНН на сайте ФНС
+          </button>
+        </div>
+      );
+    }
+  };
 
   return (
     <div className="main-page">
@@ -155,7 +350,12 @@ const ProfilePage = () => {
             style={{ cursor: "pointer" }}
           >
             <img src="/logo.png" alt="Логотип" />
-            <span className="logo-text">ОАО «РЖД» | Личный кабинет</span>
+            <span className="logo-text">
+              ОАО «РЖД» |{" "}
+              {userType === "INDIVIDUAL"
+                ? "Личный кабинет (ФЛ)"
+                : "Личный кабинет (ЮЛ)"}
+            </span>
           </div>
           <div className="header-actions">
             <button className="btn btn-outline" onClick={() => navigate("/")}>
@@ -171,13 +371,15 @@ const ProfilePage = () => {
       >
         <h2
           className="section-title"
-          style={{ textAlign: "left", marginBottom: "30px" }}
+          style={{ textAlign: "left", marginBottom: "20px" }}
         >
           Мой профиль
         </h2>
 
         {loading ? (
-          <p>Загрузка данных...</p>
+          <div style={{ textAlign: "center", padding: "50px" }}>
+            <div className="loading-spinner">Загрузка данных...</div>
+          </div>
         ) : error ? (
           <div
             style={{
@@ -193,30 +395,10 @@ const ProfilePage = () => {
           <div
             style={{ display: "flex", flexDirection: "column", gap: "30px" }}
           >
-            {/* Блок с информацией о компании */}
-            <div
-              style={{
-                background: "#f8f9fa",
-                padding: "20px",
-                borderRadius: "8px",
-                border: "1px solid #dee2e6",
-              }}
-            >
-              <h3 style={{ marginBottom: "15px", color: "#e21a1a" }}>
-                Данные компании
-              </h3>
-              <p>
-                <strong>Название:</strong> {user?.companyName}
-              </p>
-              <p>
-                <strong>ИНН:</strong> {user?.inn}
-              </p>
-              <p>
-                <strong>Email:</strong> {user?.email}
-              </p>
-            </div>
+            {renderUserInfo()}
 
-            {/* Блок с заявками */}
+            {renderActionButtons()}
+
             <div>
               <div
                 style={{
@@ -224,11 +406,12 @@ const ProfilePage = () => {
                   justifyContent: "space-between",
                   alignItems: "center",
                   marginBottom: "15px",
+                  flexWrap: "wrap",
+                  gap: "15px",
                 }}
               >
                 <h3 style={{ color: "#e21a1a" }}>Мои заявки</h3>
 
-                {/* Фильтр по статусу */}
                 <div
                   style={{ display: "flex", gap: "10px", alignItems: "center" }}
                 >
@@ -247,20 +430,53 @@ const ProfilePage = () => {
                       cursor: "pointer",
                     }}
                   >
-                    <option value="all">Все заявки ({stats.all})</option>
+                    <option value="all">Все заявки ({orderStats.all})</option>
                     <option value="черновик">
-                      Черновики ({stats.черновик})
+                      Черновики ({orderStats.черновик})
                     </option>
                     <option value="поиск_вагона">
-                      Поиск вагона ({stats.поиск_вагона})
+                      Поиск вагона ({orderStats.поиск_вагона})
                     </option>
-                    <option value="оплачен"> Оплачен ({stats.оплачен})</option>
+                    <option value="ожидает_оплаты">
+                      Ожидает оплаты ({orderStats.ожидает_оплаты})
+                    </option>
+                    <option value="оплачен">
+                      Оплачен ({orderStats.оплачен})
+                    </option>
+                    <option value="в_пути">В пути ({orderStats.в_пути})</option>
+                    <option value="доставлен">
+                      Доставлен ({orderStats.доставлен})
+                    </option>
                   </select>
                 </div>
               </div>
 
               {orders.length === 0 ? (
-                <p>У вас пока нет созданных заявок.</p>
+                <div
+                  style={{
+                    padding: "40px",
+                    textAlign: "center",
+                    background: "#f8f9fa",
+                    borderRadius: "8px",
+                    border: "1px dashed #dee2e6",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: "16px",
+                      color: "#6c757d",
+                      marginBottom: "15px",
+                    }}
+                  >
+                    У вас пока нет созданных заявок
+                  </p>
+                  <button
+                    onClick={() => navigate("/create-order")}
+                    className="btn btn-primary"
+                  >
+                    Создать первую заявку
+                  </button>
+                </div>
               ) : filteredOrders.length === 0 ? (
                 <div
                   style={{
@@ -290,116 +506,133 @@ const ProfilePage = () => {
                   </button>
                 </div>
               ) : (
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    background: "white",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <thead style={{ background: "#f1f3f5", textAlign: "left" }}>
-                    <tr>
-                      <th
-                        style={{
-                          padding: "12px",
-                          borderBottom: "2px solid #dee2e6",
-                          width: "50px",
-                        }}
+                <>
+                  <div style={{ overflowX: "auto" }}>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        background: "white",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        minWidth: "600px",
+                      }}
+                    >
+                      <thead
+                        style={{ background: "#f1f3f5", textAlign: "left" }}
                       >
-                        #
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          borderBottom: "2px solid #dee2e6",
-                        }}
-                      >
-                        ID заявки
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          borderBottom: "2px solid #dee2e6",
-                        }}
-                      >
-                        Маршрут
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          borderBottom: "2px solid #dee2e6",
-                        }}
-                      >
-                        Груз
-                      </th>
-                      <th
-                        style={{
-                          padding: "12px",
-                          borderBottom: "2px solid #dee2e6",
-                        }}
-                      >
-                        Статус
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredOrders.map((order, index) => (
-                      <tr
-                        key={order.id}
-                        style={{ borderBottom: "1px solid #dee2e6" }}
-                      >
-                        <td
-                          style={{
-                            padding: "12px",
-                            fontWeight: "bold",
-                            color: "#6c757d",
-                          }}
-                        >
-                          {index + 1}
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px",
-                            fontFamily: "monospace",
-                            fontSize: "14px",
-                          }}
-                        >
-                          {order.id || order.orderId || "—"}
-                        </td>
-                        <td style={{ padding: "12px" }}>
-                          {order.departureStation || "—"} →{" "}
-                          {order.destinationStation || "—"}
-                        </td>
-                        <td style={{ padding: "12px" }}>
-                          {order.cargo?.cargoType || "—"}
-                          {order.cargo?.weightKg &&
-                            ` (${order.cargo.weightKg} кг)`}
-                        </td>
-                        <td style={{ padding: "12px" }}>
-                          {getStatusBadge(order.status)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                        <tr>
+                          <th
+                            style={{
+                              padding: "12px",
+                              borderBottom: "2px solid #dee2e6",
+                              width: "50px",
+                            }}
+                          >
+                            #
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px",
+                              borderBottom: "2px solid #dee2e6",
+                            }}
+                          >
+                            ID заявки
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px",
+                              borderBottom: "2px solid #dee2e6",
+                            }}
+                          >
+                            Маршрут
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px",
+                              borderBottom: "2px solid #dee2e6",
+                            }}
+                          >
+                            Груз
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px",
+                              borderBottom: "2px solid #dee2e6",
+                            }}
+                          >
+                            Стоимость
+                          </th>
+                          <th
+                            style={{
+                              padding: "12px",
+                              borderBottom: "2px solid #dee2e6",
+                            }}
+                          >
+                            Статус
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredOrders.map((order, index) => (
+                          <tr
+                            key={order.id}
+                            style={{ borderBottom: "1px solid #dee2e6" }}
+                          >
+                            <td
+                              style={{
+                                padding: "12px",
+                                fontWeight: "bold",
+                                color: "#6c757d",
+                              }}
+                            >
+                              {index + 1}
+                            </td>
+                            <td
+                              style={{
+                                padding: "12px",
+                                fontFamily: "monospace",
+                                fontSize: "14px",
+                              }}
+                            >
+                              {order.id?.substring(0, 8) || "—"}...
+                            </td>
+                            <td style={{ padding: "12px" }}>
+                              {order.departureStation || "—"} →{" "}
+                              {order.destinationStation || "—"}
+                            </td>
+                            <td style={{ padding: "12px" }}>
+                              {order.cargo?.cargoType || "—"}
+                              {order.cargo?.weightKg &&
+                                ` (${order.cargo.weightKg} кг)`}
+                            </td>
+                            <td style={{ padding: "12px" }}>
+                              {order.totalPrice
+                                ? `${order.totalPrice.toLocaleString()} ₽`
+                                : "—"}
+                            </td>
+                            <td style={{ padding: "12px" }}>
+                              {getStatusBadge(order.status)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-              {/* Информация о количестве отображаемых заявок */}
-              {filteredOrders.length > 0 && (
-                <div
-                  style={{
-                    marginTop: "15px",
-                    padding: "10px",
-                    background: "#f8f9fa",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    color: "#6c757d",
-                    textAlign: "right",
-                  }}
-                >
-                  Показано {filteredOrders.length} из {orders.length} заявок
-                </div>
+                  <div
+                    style={{
+                      marginTop: "15px",
+                      padding: "10px",
+                      background: "#f8f9fa",
+                      borderRadius: "4px",
+                      fontSize: "14px",
+                      color: "#6c757d",
+                      textAlign: "right",
+                    }}
+                  >
+                    Показано {filteredOrders.length} из {orders.length} заявок
+                  </div>
+                </>
               )}
             </div>
           </div>

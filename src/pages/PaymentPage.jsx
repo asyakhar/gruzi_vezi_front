@@ -6,19 +6,29 @@ import { fetchWithAuth } from "../api";
 const PaymentPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = useState(false);
   const orderId = searchParams.get("orderId");
   const wagonId = searchParams.get("wagonId");
   const [orderAmount, setOrderAmount] = useState(0);
+  const [userType, setUserType] = useState(null);
 
   const [paymentData, setPaymentData] = useState({
     companyName: "",
     inn: "",
+    snils: "",
+    phone: "",
+    passportSeries: "",
+    passportNumber: "",
+    passportIssuedBy: "",
+    passportIssuedDate: "",
+    registrationAddress: "",
+    // Для юридических лиц
     kpp: "",
     bik: "",
     accountNumber: "",
     correspondentAccount: "",
     bankName: "",
+    // Общие
     paymentPurpose: "",
   });
 
@@ -27,37 +37,6 @@ const PaymentPage = () => {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [createdPayment, setCreatedPayment] = useState(null);
-
-  const cancelReservation = async () => {
-    console.log("Отмена брони по запросу пользователя", {
-      wagonId,
-      orderId,
-    });
-
-    if (!wagonId) return;
-
-    try {
-      const token = localStorage.getItem("accessToken");
-      const response = await fetch(
-        `http://localhost:8080/api/dispatcher/wagons/${wagonId}/release`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.ok) {
-        console.log("Вагон освобожден");
-        setMessage("Бронь отменена. Вы можете вернуться к выбору вагона.");
-        setTimeout(() => {
-          navigate(`/create-order?orderId=${orderId}`);
-        }, 2000);
-      }
-    } catch (err) {
-      console.error("Ошибка:", err);
-      setError("Не удалось отменить бронь");
-    }
-  };
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -73,11 +52,32 @@ const PaymentPage = () => {
         const userData = await response.json();
         console.log("Данные пользователя:", userData);
 
-        setPaymentData((prev) => ({
-          ...prev,
-          companyName: userData.companyName,
-          inn: userData.inn,
-        }));
+        setUserType(userData.userType);
+
+        if (userData.userType === "LEGAL_ENTITY") {
+          setPaymentData((prev) => ({
+            ...prev,
+            companyName: userData.companyName,
+            inn: userData.inn,
+          }));
+        } else {
+          // Для физических лиц - все данные из профиля
+          const fullName = `${userData.lastName} ${userData.firstName} ${
+            userData.patronymic || ""
+          }`.trim();
+          setPaymentData((prev) => ({
+            ...prev,
+            companyName: fullName,
+            inn: userData.inn,
+            snils: userData.snils,
+            phone: userData.phone,
+            passportSeries: userData.passportSeries,
+            passportNumber: userData.passportNumber,
+            passportIssuedBy: userData.passportIssuedBy,
+            passportIssuedDate: userData.passportIssuedDate,
+            registrationAddress: userData.registrationAddress,
+          }));
+        }
 
         if (orderId) {
           const orderResponse = await fetchWithAuth(
@@ -86,12 +86,9 @@ const PaymentPage = () => {
 
           if (orderResponse.ok) {
             const orderData = await orderResponse.json();
-            console.log("Данные заказа:", orderData);
-
             const price = orderData.totalPrice || 0;
             setOrderAmount(Number(price));
           } else {
-            console.warn("Не удалось загрузить заказ, берем сумму из URL");
             const urlAmount = searchParams.get("amount");
             if (urlAmount) {
               setOrderAmount(parseFloat(urlAmount));
@@ -105,9 +102,7 @@ const PaymentPage = () => {
         }
       } catch (err) {
         console.error("Ошибка загрузки профиля:", err);
-        setError(
-          "Не удалось загрузить данные компании. Возможно, сессия истекла."
-        );
+        setError("Не удалось загрузить данные. Возможно, сессия истекла.");
         setTimeout(() => navigate("/login"), 2000);
       } finally {
         setProfileLoading(false);
@@ -116,18 +111,34 @@ const PaymentPage = () => {
 
     loadUserProfile();
   }, [navigate, orderId]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPaymentData({ ...paymentData, [name]: value });
   };
 
-  const handleCopy = async () => {
+  const cancelReservation = async () => {
+    if (!wagonId) return;
+
     try {
-      await navigator.clipboard.writeText(createdPayment.payment_document);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(
+        `http://localhost:8080/api/dispatcher/wagons/${wagonId}/release`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.ok) {
+        setMessage("Бронь отменена. Вы можете вернуться к выбору вагона.");
+        setTimeout(() => {
+          navigate(`/create-order?orderId=${orderId}`);
+        }, 2000);
+      }
     } catch (err) {
       console.error("Ошибка:", err);
+      setError("Не удалось отменить бронь");
     }
   };
 
@@ -140,8 +151,6 @@ const PaymentPage = () => {
       if (!orderId) {
         throw new Error("Не указан ID заказа в URL");
       }
-
-      console.log("Тип amount:", typeof orderAmount, "Значение:", orderAmount);
 
       let amountValue = parseFloat(orderAmount);
       if (isNaN(amountValue) || amountValue <= 0) {
@@ -158,15 +167,27 @@ const PaymentPage = () => {
         amount: amountValue,
         companyName: paymentData.companyName,
         inn: paymentData.inn,
-        kpp: paymentData.kpp || null,
-        bik: paymentData.bik,
-        accountNumber: paymentData.accountNumber,
-        correspondentAccount: paymentData.correspondentAccount || "",
-        bankName: paymentData.bankName,
         paymentPurpose:
           paymentData.paymentPurpose ||
           `Оплата перевозки по заказу №${orderId.slice(0, 8)}`,
       };
+
+      // Для юрлиц добавляем банковские реквизиты
+      if (userType === "LEGAL_ENTITY") {
+        payload.kpp = paymentData.kpp || null;
+        payload.bik = paymentData.bik;
+        payload.accountNumber = paymentData.accountNumber;
+        payload.correspondentAccount = paymentData.correspondentAccount || "";
+        payload.bankName = paymentData.bankName;
+        payload.paymentMethod = "BANK_TRANSFER";
+      } else {
+        // Для физлиц - только базовые реквизиты (бик, счет, банк - опционально)
+        if (paymentData.bik) payload.bik = paymentData.bik;
+        if (paymentData.accountNumber)
+          payload.accountNumber = paymentData.accountNumber;
+        if (paymentData.bankName) payload.bankName = paymentData.bankName;
+        payload.paymentMethod = "BANK_TRANSFER";
+      }
 
       console.log("Отправляемый payload:", payload);
 
@@ -180,17 +201,51 @@ const PaymentPage = () => {
       );
 
       if (!response.ok) {
-        await cancelReservation();
-
         const errorText = await response.text();
         throw new Error(`Ошибка ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
       setCreatedPayment(data);
-      setMessage(`✓ Платеж успешно создан!`);
+
+      if (userType === "INDIVIDUAL") {
+        setMessage(`✓ Платеж успешно создан и оплачен!".`);
+      } else {
+        setMessage(`✓ Платеж успешно создан и оплачен!`);
+      }
     } catch (err) {
       console.error("Ошибка:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmIndividualPayment = async () => {
+    if (!createdPayment) return;
+
+    setLoading(true);
+    try {
+      const response = await fetchWithAuth(
+        `http://localhost:8080/api/dispatcher/payments/individual/confirm?paymentDocument=${createdPayment.payment_document}&amount=${orderAmount}&inn=${paymentData.inn}`,
+        {
+          method: "POST",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Ошибка при подтверждении оплаты");
+      }
+
+      const updatedPayment = await response.json();
+      setCreatedPayment(updatedPayment);
+      setMessage("✓ Оплата подтверждена! Спасибо за доверие!");
+
+      // Обновляем статус заказа
+      setTimeout(() => {
+        navigate("/profile");
+      }, 2000);
+    } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
@@ -242,6 +297,226 @@ const PaymentPage = () => {
     }
   };
 
+  const renderPaymentForm = () => {
+    if (userType === "LEGAL_ENTITY") {
+      return (
+        <>
+          <div className="form-group">
+            <label className="form-label">Название компании</label>
+            <input
+              type="text"
+              value={paymentData.companyName}
+              className="form-input"
+              readOnly
+              style={{ background: "#f0f0f0", fontWeight: "bold" }}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: "20px" }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label">ИНН</label>
+              <input
+                type="text"
+                value={paymentData.inn}
+                className="form-input"
+                readOnly
+                style={{ background: "#f0f0f0", fontWeight: "bold" }}
+              />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label">КПП (если есть)</label>
+              <input
+                type="text"
+                name="kpp"
+                value={paymentData.kpp}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="9 цифр"
+              />
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "20px" }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label">БИК *</label>
+              <input
+                type="text"
+                name="bik"
+                value={paymentData.bik}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="9 цифр"
+                required
+              />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label">Расчетный счет *</label>
+              <input
+                type="text"
+                name="accountNumber"
+                value={paymentData.accountNumber}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="20 цифр"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Название банка *</label>
+            <input
+              type="text"
+              name="bankName"
+              value={paymentData.bankName}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="Введите название банка"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Корреспондентский счет</label>
+            <input
+              type="text"
+              name="correspondentAccount"
+              value={paymentData.correspondentAccount}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="20 цифр (если есть)"
+            />
+          </div>
+        </>
+      );
+    } else {
+      // Форма для физических лиц - отображаем все данные из профиля
+      return (
+        <>
+          <div className="form-group">
+            <label className="form-label">ФИО плательщика</label>
+            <input
+              type="text"
+              value={paymentData.companyName}
+              className="form-input"
+              readOnly
+              style={{ background: "#f0f0f0", fontWeight: "bold" }}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: "20px" }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label">ИНН *</label>
+              <input
+                type="text"
+                value={paymentData.inn}
+                className="form-input"
+                readOnly
+                style={{ background: "#f0f0f0" }}
+              />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label">СНИЛС *</label>
+              <input
+                type="text"
+                value={paymentData.snils || ""}
+                className="form-input"
+                readOnly
+                style={{ background: "#f0f0f0" }}
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Телефон *</label>
+            <input
+              type="tel"
+              value={paymentData.phone || ""}
+              className="form-input"
+              readOnly
+              style={{ background: "#f0f0f0" }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Адрес регистрации</label>
+            <textarea
+              value={paymentData.registrationAddress || ""}
+              className="form-input"
+              readOnly
+              rows="2"
+              style={{ background: "#f0f0f0" }}
+            />
+          </div>
+
+          <div
+            style={{
+              background: "#e8f4fd",
+              padding: "15px",
+              borderRadius: "8px",
+              marginBottom: "20px",
+            }}
+          >
+            <p style={{ marginBottom: "10px", fontWeight: "bold" }}>
+              📄 Паспортные данные:
+            </p>
+            <div style={{ display: "flex", gap: "20px", marginBottom: "10px" }}>
+              <div>
+                <strong>Серия:</strong> {paymentData.passportSeries}
+              </div>
+              <div>
+                <strong>Номер:</strong> {paymentData.passportNumber}
+              </div>
+            </div>
+            <div>
+              <strong>Кем выдан:</strong> {paymentData.passportIssuedBy}
+            </div>
+            <div>
+              <strong>Дата выдачи:</strong> {paymentData.passportIssuedDate}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "20px" }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label">БИК (необязательно)</label>
+              <input
+                type="text"
+                name="bik"
+                value={paymentData.bik}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="9 цифр"
+              />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label className="form-label">Номер счета (необязательно)</label>
+              <input
+                type="text"
+                name="accountNumber"
+                value={paymentData.accountNumber}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="20 цифр"
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Название банка (необязательно)</label>
+            <input
+              type="text"
+              name="bankName"
+              value={paymentData.bankName}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="Введите название банка"
+            />
+          </div>
+        </>
+      );
+    }
+  };
+
   if (profileLoading) {
     return (
       <div className="main-page">
@@ -249,7 +524,7 @@ const PaymentPage = () => {
           className="container"
           style={{ textAlign: "center", padding: "50px" }}
         >
-          <div className="loading-spinner">Загрузка данных компании...</div>
+          <div className="loading-spinner">Загрузка данных...</div>
         </div>
       </div>
     );
@@ -294,17 +569,30 @@ const PaymentPage = () => {
             className="section-title"
             style={{ textAlign: "center", marginBottom: "30px" }}
           >
-            Платежные реквизиты
+            Оплата перевозки
+            {userType === "INDIVIDUAL" && (
+              <span
+                style={{
+                  fontSize: "0.8rem",
+                  display: "block",
+                  color: "#666",
+                  marginTop: "5px",
+                }}
+              >
+                Физическое лицо
+              </span>
+            )}
           </h2>
 
           {message && (
             <div
               style={{
                 padding: "15px",
-                background: "#d4edda",
-                color: "#155724",
+                background: message.includes("✓") ? "#d4edda" : "#d1ecf1",
+                color: message.includes("✓") ? "#155724" : "#0c5460",
                 marginBottom: "20px",
                 borderRadius: "5px",
+                whiteSpace: "pre-line",
               }}
             >
               {message}
@@ -326,187 +614,56 @@ const PaymentPage = () => {
           )}
 
           {!createdPayment ? (
-            <>
-              <div
-                style={{
-                  background: "#fff3cd",
-                  color: "#856404",
-                  padding: "10px 15px",
-                  borderRadius: "5px",
-                  marginBottom: "20px",
-                  fontSize: "14px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <span>Вагон забронирован на 30 минут</span>
-                <button
-                  onClick={cancelReservation}
+            <form onSubmit={handleSubmit}>
+              {renderPaymentForm()}
+
+              <div className="form-group">
+                <label className="form-label">Сумма к оплате</label>
+                <input
+                  type="text"
+                  value={`${orderAmount.toLocaleString()} ₽`}
+                  className="form-input"
+                  readOnly
                   style={{
-                    background: "none",
-                    border: "none",
-                    color: "#856404",
-                    textDecoration: "underline",
-                    cursor: "pointer",
+                    background: "#f0f0f0",
                     fontWeight: "bold",
+                    color: "#e31e24",
+                    fontSize: "1.2rem",
                   }}
-                >
-                  Отменить бронь
-                </button>
+                />
               </div>
 
-              <form onSubmit={handleSubmit} className="form-container">
-                {/* Название компании */}
-                <div className="form-group">
-                  <label className="form-label">
-                    Название компании <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={paymentData.companyName}
-                    className="form-input"
-                    readOnly
-                    style={{ background: "#f0f0f0", fontWeight: "bold" }}
-                  />
-                  <small style={{ color: "#666" }}>Данные из профиля</small>
-                </div>
+              <div className="form-group">
+                <label className="form-label">Назначение платежа *</label>
+                <textarea
+                  name="paymentPurpose"
+                  value={paymentData.paymentPurpose}
+                  onChange={handleChange}
+                  className="form-input"
+                  rows="3"
+                  placeholder="Например: Оплата перевозки груза по заказу №..."
+                  required
+                />
+              </div>
 
-                {/* ИНН и КПП */}
-                <div style={{ display: "flex", gap: "20px" }}>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label">
-                      ИНН <span className="required">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={paymentData.inn}
-                      className="form-input"
-                      readOnly
-                      style={{ background: "#f0f0f0", fontWeight: "bold" }}
-                    />
-                    <small style={{ color: "#666" }}>Данные из профиля</small>
-                  </div>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label">КПП</label>
-                    <input
-                      type="text"
-                      name="kpp"
-                      value={paymentData.kpp}
-                      onChange={handleChange}
-                      className="form-input"
-                      placeholder="9 цифр (для юрлиц)"
-                    />
-                  </div>
-                </div>
-
-                {/* БИК и Расчетный счет */}
-                <div style={{ display: "flex", gap: "20px" }}>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label">
-                      БИК <span className="required">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="bik"
-                      value={paymentData.bik}
-                      onChange={handleChange}
-                      className="form-input"
-                      placeholder="9 цифр"
-                      required
-                    />
-                  </div>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label">
-                      Расчетный счет <span className="required">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="accountNumber"
-                      value={paymentData.accountNumber}
-                      onChange={handleChange}
-                      className="form-input"
-                      placeholder="20 цифр"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Корр. счет и Банк */}
-                <div className="form-group">
-                  <label className="form-label">Корреспондентский счет</label>
-                  <input
-                    type="text"
-                    name="correspondentAccount"
-                    value={paymentData.correspondentAccount}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="20 цифр (если есть)"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">
-                    Название банка <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="bankName"
-                    value={paymentData.bankName}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="Введите название банка"
-                    required
-                  />
-                </div>
-
-                {/* Сумма платежа */}
-                <div className="form-group">
-                  <label className="form-label">
-                    Сумма к оплате <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={`${orderAmount.toLocaleString()} ₽`}
-                    className="form-input"
-                    readOnly
-                    style={{
-                      background: "#f0f0f0",
-                      fontWeight: "bold",
-                      color: "#0066cc",
-                    }}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">
-                    Назначение платежа <span className="required">*</span>
-                  </label>
-                  <textarea
-                    name="paymentPurpose"
-                    value={paymentData.paymentPurpose}
-                    onChange={handleChange}
-                    className="form-input"
-                    rows="3"
-                    placeholder="Опишите назначение платежа"
-                    required
-                  />
-                </div>
-
-                <div style={{ textAlign: "center", marginTop: "30px" }}>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={loading}
-                    style={{ fontSize: "1.1rem", padding: "12px 40px" }}
-                  >
-                    {loading ? "Создание..." : "Оплатить"}
-                  </button>
-                </div>
-              </form>
-            </>
+              <div style={{ textAlign: "center", marginTop: "30px" }}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={loading}
+                  style={{ fontSize: "1.1rem", padding: "12px 40px" }}
+                >
+                  {loading
+                    ? "Создание платежа..."
+                    : userType === "LEGAL_ENTITY"
+                    ? "Оплатить"
+                    : "Создать платеж"}
+                </button>
+              </div>
+            </form>
           ) : (
             <div style={{ textAlign: "center" }}>
+              {/* Реквизиты для оплаты */}
               <div
                 style={{
                   background: "#f8f9fa",
@@ -515,8 +672,14 @@ const PaymentPage = () => {
                   margin: "30px 0",
                 }}
               >
-                <p style={{ fontSize: "1.1rem", marginBottom: "15px" }}>
-                  <strong>Номер платежного документа:</strong>
+                <p
+                  style={{
+                    fontSize: "1.1rem",
+                    marginBottom: "15px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Номер платежного документа:
                 </p>
                 <div
                   style={{
@@ -524,7 +687,7 @@ const PaymentPage = () => {
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "10px",
-                    fontSize: "1.5rem",
+                    fontSize: "1.3rem",
                     fontWeight: "bold",
                     color: "#0066cc",
                     fontFamily: "monospace",
@@ -532,30 +695,37 @@ const PaymentPage = () => {
                     background: "white",
                     borderRadius: "5px",
                     border: "2px dashed #0066cc",
+                    marginBottom: "20px",
                   }}
                 >
                   <span>{createdPayment.payment_document}</span>
                   <button
-                    onClick={handleCopy}
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        createdPayment.payment_document
+                      );
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
                     style={{
                       background: "none",
                       border: "none",
                       cursor: "pointer",
-                      color: copied ? "#28a745" : "#0066cc",
+                      fontSize: "1.2rem",
                     }}
-                  ></button>
+                  >
+                    {copied ? "✓" : "⎘"}
+                  </button>
                 </div>
               </div>
-              <h3>
-                Подпишите договор и пришлите на нашу корпоративную почту
-                rzd@mail.ru
-              </h3>
+
               <div
                 style={{
                   marginTop: "20px",
                   display: "flex",
                   gap: "20px",
                   justifyContent: "center",
+                  flexWrap: "wrap",
                 }}
               >
                 <button onClick={downloadInvoice} className="btn btn-primary">
@@ -564,11 +734,24 @@ const PaymentPage = () => {
                 <button onClick={downloadContract} className="btn btn-primary">
                   Скачать договор
                 </button>
+
+                {userType === "INDIVIDUAL" &&
+                  createdPayment.status === "PENDING" && (
+                    <button
+                      onClick={confirmIndividualPayment}
+                      className="btn btn-primary"
+                      disabled={loading}
+                      style={{ background: "#28a745" }}
+                    >
+                      {loading ? "Подтверждение..." : "Подтвердить оплату"}
+                    </button>
+                  )}
+
                 <button
                   onClick={() => navigate("/")}
                   className="btn btn-outline"
                 >
-                  На главную
+                  🏠 На главную
                 </button>
               </div>
             </div>
