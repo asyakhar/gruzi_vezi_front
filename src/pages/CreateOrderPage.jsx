@@ -271,39 +271,48 @@ const CreateOrderPage = () => {
     try {
       const token = localStorage.getItem("accessToken");
 
-      const reserveResponse = await fetch(
-        `http://localhost:8080/api/dispatcher/wagons/${wagonId}/reserve?orderId=${orderId}&minutes=30`,
+      const selectedServices = selectedServicesByWagon[wagonId] || new Set();
+
+      const requestBody = {
+        orderRequest: {
+          departureStation: formData.departureStation,
+          destinationStation: formData.destinationStation,
+          requestedWagonType: formData.requestedWagonType,
+          cargo: {
+            cargoType: formData.cargoType,
+            weightKg: Number(formData.weightKg),
+            volumeM3: Number(formData.volumeM3),
+            packagingType: formData.packagingType,
+          },
+        },
+        wagonId: wagonId,
+        selectedServices: Array.from(selectedServices),
+      };
+
+      const response = await fetch(
+        `http://localhost:8080/api/orders/complete-with-reservation`,
         {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestBody),
         }
       );
 
-      if (!reserveResponse.ok) throw new Error("Ошибка при резервировании");
-
-      const confirmResponse = await fetch(
-        `http://localhost:8080/api/orders/${orderId}/confirm-wagon?wagonId=${wagonId}&totalPrice=${fullPrice.totalPrice}`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!confirmResponse.ok) {
-        await fetch(
-          `http://localhost:8080/api/dispatcher/wagons/${wagonId}/release`,
-          {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        throw new Error("Не удалось сохранить данные в заказ");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Ошибка при создании заявки");
       }
+
+      const data = await response.json();
+      console.log("Транзакция успешна:", data);
 
       setMessage(`✓ Вагон забронирован. Переходите к оплате.`);
 
       navigate(
-        `/payment/create?orderId=${orderId}&wagonId=${wagonId}&amount=${fullPrice.totalPrice}`
+        `/payment/create?orderId=${data.orderId}&wagonId=${wagonId}&amount=${fullPrice.totalPrice}`
       );
     } catch (err) {
       setError(err.message);

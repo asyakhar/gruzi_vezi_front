@@ -61,7 +61,7 @@ const PaymentPage = () => {
             inn: userData.inn,
           }));
         } else {
-          // Для физических лиц - все данные из профиля
+          // Для физических лиц все данные из профиля
           const fullName = `${userData.lastName} ${userData.firstName} ${
             userData.patronymic || ""
           }`.trim();
@@ -142,6 +142,7 @@ const PaymentPage = () => {
     }
   };
 
+  // ТРАНЗАКЦИЯ 2: Обработка платежа с документами (заменяет старый handleSubmit)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -172,7 +173,6 @@ const PaymentPage = () => {
           `Оплата перевозки по заказу №${orderId.slice(0, 8)}`,
       };
 
-      // Для юрлиц добавляем банковские реквизиты
       if (userType === "LEGAL_ENTITY") {
         payload.kpp = paymentData.kpp || null;
         payload.bik = paymentData.bik;
@@ -181,7 +181,6 @@ const PaymentPage = () => {
         payload.bankName = paymentData.bankName;
         payload.paymentMethod = "BANK_TRANSFER";
       } else {
-        // Для физлиц - только базовые реквизиты (бик, счет, банк - опционально)
         if (paymentData.bik) payload.bik = paymentData.bik;
         if (paymentData.accountNumber)
           payload.accountNumber = paymentData.accountNumber;
@@ -209,7 +208,7 @@ const PaymentPage = () => {
       setCreatedPayment(data);
 
       if (userType === "INDIVIDUAL") {
-        setMessage(`✓ Платеж успешно создан и оплачен!".`);
+        setMessage(`✓ Платеж успешно создан и оплачен!`);
       } else {
         setMessage(`✓ Платеж успешно создан и оплачен!`);
       }
@@ -390,7 +389,6 @@ const PaymentPage = () => {
         </>
       );
     } else {
-      // Форма для физических лиц - отображаем все данные из профиля
       return (
         <>
           <div className="form-group">

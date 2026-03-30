@@ -160,6 +160,49 @@ const ProfilePage = () => {
     }
   };
 
+  const cancelOrder = async (orderId) => {
+    if (
+      !window.confirm(
+        "Вы уверены, что хотите отменить заявку? Все изменения будут откачены."
+      )
+    )
+      return;
+
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      const response = await fetch(
+        `http://localhost:8080/api/orders/${orderId}/complete-cancel?withRefund=true`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Ошибка при отмене");
+      }
+
+      alert("Заявка успешно отменена (JTA транзакция)");
+
+      const ordersResponse = await fetchWithAuth(
+        "http://localhost:8080/api/orders"
+      );
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json();
+        setOrders(ordersData);
+        setFilteredOrders(ordersData);
+      } else {
+        window.location.reload();
+      }
+    } catch (err) {
+      alert(`Ошибка: ${err.message}. Транзакция откатилась.`);
+    }
+  };
   const getStatusStats = () => {
     const stats = {
       all: orders.length,
@@ -294,7 +337,14 @@ const ProfilePage = () => {
     console.log(userRole);
     if (userRole === "ADMIN") {
       return (
-        <div style={{ display: "flex", gap: "15px", marginBottom: "30px", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "15px",
+            marginBottom: "30px",
+            flexWrap: "wrap",
+          }}
+        >
           <button
             onClick={() => navigate("/admin")}
             className="btn btn-primary"
@@ -593,6 +643,14 @@ const ProfilePage = () => {
                           >
                             Статус
                           </th>
+                          <th
+                            style={{
+                              padding: "12px",
+                              borderBottom: "2px solid #dee2e6",
+                            }}
+                          >
+                            Действия
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -635,6 +693,22 @@ const ProfilePage = () => {
                             </td>
                             <td style={{ padding: "12px" }}>
                               {getStatusBadge(order.status)}
+                            </td>
+                            <td style={{ padding: "12px" }}>
+                              <button
+                                onClick={() => cancelOrder(order.id)}
+                                style={{
+                                  background: "#dc3545",
+                                  color: "white",
+                                  border: "none",
+                                  padding: "6px 12px",
+                                  borderRadius: "4px",
+                                  cursor: "pointer",
+                                  fontSize: "12px",
+                                }}
+                              >
+                                Отменить
+                              </button>
                             </td>
                           </tr>
                         ))}
