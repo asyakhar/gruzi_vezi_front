@@ -7,6 +7,7 @@ import RegisterPage from "./pages/RegisterPage";
 import PaymentPage from "./pages/PaymentPage";
 import CargoCalculatorPage from "./pages/CargoCalculatorPage";
 import ProfilePage from "./pages/ProfilePage";
+import AdminPage from './pages/AdminPage';
 function App() {
   return (
     <div className="App">
@@ -19,6 +20,7 @@ function App() {
           <Route path="/calculator" element={<CargoCalculatorPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </Router>
     </div>

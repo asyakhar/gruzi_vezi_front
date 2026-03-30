@@ -5,7 +5,7 @@ import "./MainPage.css";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-
+  const [userRole, setUserRole] = useState(null);
   const [user, setUser] = useState(null);
   const [userType, setUserType] = useState(null);
   const [fullProfile, setFullProfile] = useState(null);
@@ -30,10 +30,12 @@ const ProfilePage = () => {
         const userResponse = await fetchWithAuth(
           "http://localhost:8080/api/user/me"
         );
+
         if (!userResponse.ok)
           throw new Error("Не удалось загрузить данные пользователя");
         const userData = await userResponse.json();
         setUser(userData);
+        setUserRole(userData.role);
 
         const ordersResponse = await fetchWithAuth(
           "http://localhost:8080/api/orders"
@@ -289,6 +291,27 @@ const ProfilePage = () => {
   };
 
   const renderActionButtons = () => {
+    console.log(userRole);
+    if (userRole === "ADMIN") {
+      return (
+        <div style={{ display: "flex", gap: "15px", marginBottom: "30px", flexWrap: "wrap" }}>
+          <button
+            onClick={() => navigate("/admin")}
+            className="btn btn-primary"
+            style={{ background: "#e21a1a", borderColor: "#e21a1a" }}
+          >
+            Перейти в Панель Администратора
+          </button>
+          <button
+            onClick={() => navigate("/create-order")}
+            className="btn btn-outline"
+          >
+            Тестовая заявка
+          </button>
+        </div>
+      );
+    }
+
     if (userType === "LEGAL_ENTITY") {
       return (
         <div style={{ display: "flex", gap: "15px", marginBottom: "30px" }}>
