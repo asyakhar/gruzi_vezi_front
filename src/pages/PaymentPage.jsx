@@ -749,7 +749,7 @@ const PaymentPage = () => {
                   onClick={() => navigate("/")}
                   className="btn btn-outline"
                 >
-                  🏠 На главную
+                  На главную
                 </button>
               </div>
             </div>
