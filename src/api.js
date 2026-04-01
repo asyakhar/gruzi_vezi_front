@@ -3,7 +3,7 @@ import API_CONFIG from './config';
 
 // Базовый fetch с авторизацией
 export const fetchWithAuth = async (url, options = {}) => {
-  let accessToken = localStorage.getItem("accessToken");
+  let accessToken = sessionStorage.getItem("accessToken");
   
   const headers = {
     "Content-Type": "application/json",
@@ -21,7 +21,7 @@ export const fetchWithAuth = async (url, options = {}) => {
   
   // Если токен протух (401)
   if (response.status === 401) {
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = sessionStorage.getItem("refreshToken");
     
     if (refreshToken) {
       try {
@@ -33,8 +33,8 @@ export const fetchWithAuth = async (url, options = {}) => {
         
         if (refreshResponse.ok) {
           const data = await refreshResponse.json();
-          localStorage.setItem("accessToken", data.accessToken);
-          localStorage.setItem("refreshToken", data.refreshToken);
+          sessionStorage.setItem("accessToken", data.accessToken);
+          sessionStorage.setItem("refreshToken", data.refreshToken);
           
           // Повторяем запрос с новым токеном
           headers["Authorization"] = `Bearer ${data.accessToken}`;
@@ -43,12 +43,12 @@ export const fetchWithAuth = async (url, options = {}) => {
           throw new Error("Refresh token expired");
         }
       } catch (err) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        sessionStorage.removeItem("accessToken");
+        sessionStorage.removeItem("refreshToken");
         window.location.href = "/login";
       }
     } else {
-      localStorage.removeItem("accessToken");
+      sessionStorage.removeItem("accessToken");
       window.location.href = "/login";
     }
   }

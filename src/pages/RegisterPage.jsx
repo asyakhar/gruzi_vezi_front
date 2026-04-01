@@ -150,8 +150,8 @@ const RegisterPage = () => {
         }
       }
 
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+      sessionStorage.setItem("accessToken", data.accessToken);
+      sessionStorage.setItem("refreshToken", data.refreshToken);
 
       alert("Регистрация успешна!");
       navigate("/");
@@ -271,9 +271,8 @@ const RegisterPage = () => {
                 placeholder="Название компании *"
                 value={formData.companyName}
                 onChange={handleChange}
-                className={`form-input ${
-                  errors.companyName ? "input-error" : ""
-                }`}
+                className={`form-input ${errors.companyName ? "input-error" : ""
+                  }`}
                 required
               />
               {errors.companyName && (
@@ -315,9 +314,8 @@ const RegisterPage = () => {
                   placeholder="Фамилия *"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className={`form-input ${
-                    errors.lastName ? "input-error" : ""
-                  }`}
+                  className={`form-input ${errors.lastName ? "input-error" : ""
+                    }`}
                   required
                 />
                 {errors.lastName && (
@@ -335,9 +333,8 @@ const RegisterPage = () => {
                   placeholder="Имя *"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className={`form-input ${
-                    errors.firstName ? "input-error" : ""
-                  }`}
+                  className={`form-input ${errors.firstName ? "input-error" : ""
+                    }`}
                   required
                 />
                 {errors.firstName && (
@@ -427,9 +424,8 @@ const RegisterPage = () => {
                   placeholder="Серия паспорта (4 цифры) *"
                   value={formData.passportSeries}
                   onChange={handleChange}
-                  className={`form-input ${
-                    errors.passportSeries ? "input-error" : ""
-                  }`}
+                  className={`form-input ${errors.passportSeries ? "input-error" : ""
+                    }`}
                   maxLength="4"
                   required
                 />
@@ -441,9 +437,8 @@ const RegisterPage = () => {
                   placeholder="Номер паспорта (6 цифр) *"
                   value={formData.passportNumber}
                   onChange={handleChange}
-                  className={`form-input ${
-                    errors.passportNumber ? "input-error" : ""
-                  }`}
+                  className={`form-input ${errors.passportNumber ? "input-error" : ""
+                    }`}
                   maxLength="6"
                   required
                 />
@@ -467,9 +462,8 @@ const RegisterPage = () => {
                 placeholder="Кем выдан паспорт *"
                 value={formData.passportIssuedBy}
                 onChange={handleChange}
-                className={`form-input ${
-                  errors.passportIssuedBy ? "input-error" : ""
-                }`}
+                className={`form-input ${errors.passportIssuedBy ? "input-error" : ""
+                  }`}
                 required
               />
               {errors.passportIssuedBy && (
@@ -488,9 +482,8 @@ const RegisterPage = () => {
                 placeholder="Дата выдачи *"
                 value={formData.passportIssuedDate}
                 onChange={handleChange}
-                className={`form-input ${
-                  errors.passportIssuedDate ? "input-error" : ""
-                }`}
+                className={`form-input ${errors.passportIssuedDate ? "input-error" : ""
+                  }`}
                 required
               />
               {errors.passportIssuedDate && (
@@ -508,9 +501,8 @@ const RegisterPage = () => {
                 placeholder="Адрес регистрации *"
                 value={formData.registrationAddress}
                 onChange={handleChange}
-                className={`form-input ${
-                  errors.registrationAddress ? "input-error" : ""
-                }`}
+                className={`form-input ${errors.registrationAddress ? "input-error" : ""
+                  }`}
                 rows="3"
                 required
               />

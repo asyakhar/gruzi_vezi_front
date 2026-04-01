@@ -8,14 +8,14 @@ const MainPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
+    const token = sessionStorage.getItem("accessToken");
     if (token) {
       setIsLoggedIn(true);
     }
   }, []);
 
   const handleLogout = async () => {
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = sessionStorage.getItem("refreshToken");
 
     if (refreshToken) {
       try {
@@ -29,8 +29,8 @@ const MainPage = () => {
       }
     }
 
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("refreshToken");
 
     setIsLoggedIn(false);
     alert("Вы успешно вышли из аккаунта");
@@ -39,7 +39,7 @@ const MainPage = () => {
   const handleOrderClick = (e) => {
     e.preventDefault();
 
-    const token = localStorage.getItem("accessToken");
+    const token = sessionStorage.getItem("accessToken");
 
     if (token) {
       navigate("/create-order");
@@ -51,7 +51,7 @@ const MainPage = () => {
 
   const handleProfileClick = (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("accessToken");
+    const token = sessionStorage.getItem("accessToken");
     if (token) {
       navigate("/profile");
     } else {

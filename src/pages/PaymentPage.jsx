@@ -62,9 +62,8 @@ const PaymentPage = () => {
           }));
         } else {
           // Для физических лиц все данные из профиля
-          const fullName = `${userData.lastName} ${userData.firstName} ${
-            userData.patronymic || ""
-          }`.trim();
+          const fullName = `${userData.lastName} ${userData.firstName} ${userData.patronymic || ""
+            }`.trim();
           setPaymentData((prev) => ({
             ...prev,
             companyName: fullName,
@@ -121,7 +120,7 @@ const PaymentPage = () => {
     if (!wagonId) return;
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
         `http://localhost:8080/api/dispatcher/wagons/${wagonId}/release`,
         {
@@ -654,8 +653,8 @@ const PaymentPage = () => {
                   {loading
                     ? "Создание платежа..."
                     : userType === "LEGAL_ENTITY"
-                    ? "Оплатить"
-                    : "Создать платеж"}
+                      ? "Оплатить"
+                      : "Создать платеж"}
                 </button>
               </div>
             </form>

@@ -28,8 +28,8 @@ const LoginPage = () => {
 
       const data = await response.json();
 
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+      sessionStorage.setItem("accessToken", data.accessToken);
+      sessionStorage.setItem("refreshToken", data.refreshToken);
 
       alert("Вы успешно вошли!");
       navigate("/");

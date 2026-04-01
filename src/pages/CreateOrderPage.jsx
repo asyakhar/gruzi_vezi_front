@@ -57,7 +57,7 @@ const CreateOrderPage = () => {
   const cancelReservation = async (wagonId) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
 
       const response = await fetch(
         `http://localhost:8080/api/dispatcher/wagons/${wagonId}/release`,
@@ -86,7 +86,7 @@ const CreateOrderPage = () => {
 
     setCalculating(true);
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
       const selectedServices = selectedServicesByWagon[wagonId] || new Set();
 
       const response = await fetch(
@@ -188,7 +188,7 @@ const CreateOrderPage = () => {
   const searchWagons = async (orderId) => {
     setCalculating(true);
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
 
       const searchPayload = {
         orderId: orderId,
@@ -233,7 +233,7 @@ const CreateOrderPage = () => {
   const calculateFullPrice = async (wagonId) => {
     setCalculating(true);
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
       const selectedServices = selectedServicesByWagon[wagonId] || new Set();
 
       const response = await fetch(
@@ -269,7 +269,7 @@ const CreateOrderPage = () => {
   const reserveWagon = async (wagonId) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
 
       const selectedServices = selectedServicesByWagon[wagonId] || new Set();
 
@@ -561,11 +561,10 @@ const CreateOrderPage = () => {
               return (
                 <div
                   key={wagon.wagonId}
-                  className={`wagon-card ${
-                    selectedWagon?.wagonId === wagon.wagonId
+                  className={`wagon-card ${selectedWagon?.wagonId === wagon.wagonId
                       ? "recommended"
                       : ""
-                  }`}
+                    }`}
                 >
                   <div className="wagon-header">
                     <span className="wagon-type">

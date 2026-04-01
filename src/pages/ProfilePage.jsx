@@ -169,7 +169,7 @@ const ProfilePage = () => {
       return;
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken");
 
       const response = await fetch(
         `http://localhost:8080/api/orders/${orderId}/complete-cancel?withRefund=true`,
