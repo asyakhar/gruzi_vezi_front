@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MainPage.css";
 import "./WagonSearchResult.css";
@@ -19,7 +19,6 @@ const CreateOrderPage = () => {
     packagingType: "Паллеты",
   });
 
-  const [orderId, setOrderId] = useState(null);
   const [wagons, setWagons] = useState([]);
   const [selectedWagon, setSelectedWagon] = useState(null);
   const [fullPrice, setFullPrice] = useState(null);
@@ -27,10 +26,7 @@ const CreateOrderPage = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [calculating, setCalculating] = useState(false);
-
   const [selectedServicesByWagon, setSelectedServicesByWagon] = useState({});
-
-  const [priceCalcTimer, setPriceCalcTimer] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,168 +37,37 @@ const CreateOrderPage = () => {
     setSelectedServicesByWagon((prev) => {
       const wagonServices = prev[wagonId] || new Set();
       const newSet = new Set(wagonServices);
-
       if (newSet.has(serviceCode)) {
         newSet.delete(serviceCode);
       } else {
         newSet.add(serviceCode);
       }
-
-      return {
-        ...prev,
-        [wagonId]: newSet,
-      };
+      return { ...prev, [wagonId]: newSet };
     });
   };
-  const cancelReservation = async (wagonId) => {
+
+  const searchWagonsTemporary = async () => {
     setLoading(true);
-    try {
-      const token = sessionStorage.getItem("accessToken");
-
-      const response = await fetch(
-        `http://localhost:8080/api/dispatcher/wagons/${wagonId}/release`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!response.ok) throw new Error("Ошибка при отмене брони");
-
-      setMessage(`✓ Бронь отменена`);
-      setSelectedWagon(null);
-      setFullPrice(null);
-
-      await searchWagons(orderId);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const recalculatePrice = async (wagonId) => {
-    if (!orderId || !wagonId) return;
-
-    setCalculating(true);
-    try {
-      const token = sessionStorage.getItem("accessToken");
-      const selectedServices = selectedServicesByWagon[wagonId] || new Set();
-
-      const response = await fetch(
-        `http://localhost:8080/api/dispatcher/pricing/full?orderId=${orderId}&wagonId=${wagonId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            selectedServices: Array.from(selectedServices),
-          }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Ошибка при расчете стоимости");
-
-      const data = await response.json();
-      console.log("Ответ от сервера:", data);
-
-      setFullPrice(data);
-
-      const wagon = wagons.find((w) => w.wagonId === wagonId);
-      setSelectedWagon({ ...wagon, price: data });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setCalculating(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage(null);
     setError(null);
     setWagons([]);
     setSelectedWagon(null);
     setFullPrice(null);
     setSelectedServicesByWagon({});
-    setLoading(true);
 
-    const payload = {
+    const searchPayload = {
       departureStation: formData.departureStation,
-      destinationStation: formData.destinationStation,
-      requestedWagonType: formData.requestedWagonType,
-      cargo: {
-        cargoType: formData.cargoType,
-        weightKg: Number(formData.weightKg),
-        volumeM3: Number(formData.volumeM3),
-        packagingType: formData.packagingType,
-      },
+      arrivalStation: formData.destinationStation,
+      weightKg: Number(formData.weightKg),
+      volumeM3: Number(formData.volumeM3),
+      cargoType: formData.cargoType,
+      preferredWagonType: formData.requestedWagonType,
+      allowAlternativeStations: true,
     };
 
     try {
-      const response = await fetchWithAuth(`${API_CONFIG.baseURL}/api/orders`, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        if (errorData && errorData.message) {
-          throw new Error(errorData.message);
-        }
-        throw new Error("Ошибка при создании заявки");
-      }
-
-      const data = await response.json();
-      console.log("Ответ от сервера:", data);
-
-      let newOrderId = null;
-
-      if (data.id) {
-        newOrderId = data.id;
-      } else if (data.orderId) {
-        newOrderId = data.orderId;
-      } else if (data.order_id) {
-        newOrderId = data.order_id;
-      } else {
-        console.error("Неизвестный формат ответа:", data);
-        throw new Error("Сервер вернул данные в неожиданном формате");
-      }
-
-      setOrderId(newOrderId);
-      setMessage(
-        `✓ Заявка №${newOrderId.slice(0, 8)} создана! Ищем подходящие вагоны...`
-      );
-
-      await searchWagons(newOrderId);
-    } catch (err) {
-      setError(err.message);
-      console.error("Ошибка:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const searchWagons = async (orderId) => {
-    setCalculating(true);
-    try {
       const token = sessionStorage.getItem("accessToken");
-
-      const searchPayload = {
-        orderId: orderId,
-        departureStation: formData.departureStation,
-        arrivalStation: formData.destinationStation,
-        weightKg: Number(formData.weightKg),
-        volumeM3: Number(formData.volumeM3),
-        cargoType: formData.cargoType,
-        preferredWagonType: formData.requestedWagonType,
-        allowAlternativeStations: true,
-      };
-
       const response = await fetch(
-        `${API_CONFIG.baseURL}/api/dispatcher/wagons/search`,
+        `${API_CONFIG.baseURL}/api/dispatcher/wagons/search-temporary`,
         {
           method: "POST",
           headers: {
@@ -217,44 +82,65 @@ const CreateOrderPage = () => {
 
       const data = await response.json();
       setWagons(data);
-
-      if (data.length > 0) {
-        setMessage(`Найдено ${data.length} подходящих вагонов`);
-      } else {
-        setMessage("Вагонов не найдено. Попробуйте изменить параметры");
-      }
+      setMessage(
+        data.length > 0
+          ? `✓ Найдено ${data.length} подходящих вагонов`
+          : "Вагонов не найдено. Попробуйте изменить параметры"
+      );
     } catch (err) {
       setError(err.message);
     } finally {
-      setCalculating(false);
+      setLoading(false);
     }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!formData.departureStation || !formData.destinationStation) {
+      setError("Заполните станции отправления и назначения");
+      return;
+    }
+    if (!formData.weightKg || !formData.volumeM3) {
+      setError("Заполните вес и объем груза");
+      return;
+    }
+
+    searchWagonsTemporary();
   };
 
   const calculateFullPrice = async (wagonId) => {
     setCalculating(true);
+    setError(null);
+
     try {
       const token = sessionStorage.getItem("accessToken");
       const selectedServices = selectedServicesByWagon[wagonId] || new Set();
 
+      const priceRequest = {
+        cargoType: formData.cargoType,
+        wagonType: formData.requestedWagonType,
+        weightKg: Number(formData.weightKg),
+        departureStation: formData.departureStation,
+        destinationStation: formData.destinationStation,
+        selectedServices: Array.from(selectedServices),
+      };
+
       const response = await fetch(
-        `http://localhost:8080/api/dispatcher/pricing/full?orderId=${orderId}&wagonId=${wagonId}`,
+        `${API_CONFIG.baseURL}/api/dispatcher/pricing/calculate-for-wagon?wagonId=${wagonId}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            selectedServices: Array.from(selectedServices),
-          }),
+          body: JSON.stringify(priceRequest),
         }
       );
 
       if (!response.ok) throw new Error("Ошибка при расчете стоимости");
 
       const data = await response.json();
-      console.log("Ответ от сервера:", data);
-
       setFullPrice(data);
 
       const wagon = wagons.find((w) => w.wagonId === wagonId);
@@ -266,11 +152,17 @@ const CreateOrderPage = () => {
     }
   };
 
-  const reserveWagon = async (wagonId) => {
+  const recalculatePrice = async (wagonId) => {
+    if (!wagonId) return;
+    await calculateFullPrice(wagonId);
+  };
+
+  const reserveWagonAndCreateOrder = async (wagonId) => {
     setLoading(true);
+    setError(null);
+
     try {
       const token = sessionStorage.getItem("accessToken");
-
       const selectedServices = selectedServicesByWagon[wagonId] || new Set();
 
       const requestBody = {
@@ -290,7 +182,7 @@ const CreateOrderPage = () => {
       };
 
       const response = await fetch(
-        `http://localhost:8080/api/orders/complete-with-reservation`,
+        `${API_CONFIG.baseURL}/api/orders/complete-with-reservation`,
         {
           method: "POST",
           headers: {
@@ -302,14 +194,14 @@ const CreateOrderPage = () => {
       );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Ошибка при создании заявки");
+        const errData = await response.json();
+        throw new Error(errData.message || "Ошибка при создании заявки");
       }
 
       const data = await response.json();
-      console.log("Транзакция успешна:", data);
-
-      setMessage(`✓ Вагон забронирован. Переходите к оплате.`);
+      setMessage(
+        `✓ Заявка №${data.orderId.slice(0, 8)} создана, вагон забронирован.`
+      );
 
       navigate(
         `/payment/create?orderId=${data.orderId}&wagonId=${wagonId}&amount=${fullPrice.totalPrice}`
@@ -320,6 +212,7 @@ const CreateOrderPage = () => {
       setLoading(false);
     }
   };
+
   const getMatchClass = (percentage) => {
     if (percentage >= 90) return "match-ideal";
     if (percentage >= 75) return "match-good";
@@ -361,15 +254,8 @@ const CreateOrderPage = () => {
             style={{ cursor: "pointer" }}
           >
             <img src="/logo.png" alt="РЖД Логотип" />
-            <span className="logo-text">ОАО «РЖД» | Личный кабинет</span>
+            <span className="logo-text">ОАО «РЖД» | Подбор вагонов</span>
           </div>
-          <nav className="main-nav">
-            <ul className="nav-list">
-              <li>
-                {/* <a href="#" className="active">Грузовые перевозки</a> */}
-              </li>
-            </ul>
-          </nav>
           <div className="header-actions">
             <button className="btn btn-outline" onClick={() => navigate("/")}>
               На главную
@@ -391,7 +277,7 @@ const CreateOrderPage = () => {
           className="section-title"
           style={{ textAlign: "left", marginBottom: "30px" }}
         >
-          Оформление заявки на перевозку
+          Подбор вагонов для перевозки
         </h2>
 
         {message && (
@@ -540,7 +426,7 @@ const CreateOrderPage = () => {
             style={{ alignSelf: "flex-start", marginTop: "10px" }}
             disabled={loading}
           >
-            {loading ? "Создание..." : "Создать заявку"}
+            {loading ? "Поиск..." : "Найти вагоны"}
           </button>
         </form>
 
@@ -615,7 +501,6 @@ const CreateOrderPage = () => {
                       <div className="services-list">
                         <h4>Дополнительные услуги:</h4>
 
-                        {/* Отображаем все доступные услуги с чекбоксами */}
                         {fullPrice.availableServices.map((service, idx) => (
                           <div key={idx} className="service-item">
                             <input
@@ -649,11 +534,6 @@ const CreateOrderPage = () => {
                                 >
                                   {getCategoryLabel(service.category)}
                                 </span>
-                                {/* {service.isRecommended && (
-                                  <span className="recommendation-badge">
-                                    Рекомендуем
-                                  </span>
-                                )} */}
                               </div>
                               <div className="service-description">
                                 {service.description}
@@ -741,30 +621,16 @@ const CreateOrderPage = () => {
                     </div>
                     <div>
                       {selectedWagon?.wagonId === wagon.wagonId ? (
-                        <div style={{ display: "flex", gap: "10px" }}>
-                          <button
-                            className="btn-reserve"
-                            onClick={() => reserveWagon(wagon.wagonId)}
-                            disabled={loading}
-                            style={{ background: "#28a745" }}
-                          >
-                            {loading ? "..." : "Оплатить"}
-                          </button>
-                          <button
-                            onClick={() => cancelReservation(wagon.wagonId)}
-                            disabled={loading}
-                            style={{
-                              padding: "12px 24px",
-                              background: "#dc3545",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "5px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            Отменить бронь
-                          </button>
-                        </div>
+                        <button
+                          className="btn-reserve"
+                          onClick={() =>
+                            reserveWagonAndCreateOrder(wagon.wagonId)
+                          }
+                          disabled={loading}
+                          style={{ background: "#28a745" }}
+                        >
+                          {loading ? "..." : "Оплатить"}
+                        </button>
                       ) : (
                         <button
                           className="btn-reserve"
