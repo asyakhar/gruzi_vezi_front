@@ -561,10 +561,11 @@ const CreateOrderPage = () => {
               return (
                 <div
                   key={wagon.wagonId}
-                  className={`wagon-card ${selectedWagon?.wagonId === wagon.wagonId
+                  className={`wagon-card ${
+                    selectedWagon?.wagonId === wagon.wagonId
                       ? "recommended"
                       : ""
-                    }`}
+                  }`}
                 >
                   <div className="wagon-header">
                     <span className="wagon-type">

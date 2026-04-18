@@ -62,8 +62,9 @@ const PaymentPage = () => {
           }));
         } else {
           // Для физических лиц все данные из профиля
-          const fullName = `${userData.lastName} ${userData.firstName} ${userData.patronymic || ""
-            }`.trim();
+          const fullName = `${userData.lastName} ${userData.firstName} ${
+            userData.patronymic || ""
+          }`.trim();
           setPaymentData((prev) => ({
             ...prev,
             companyName: fullName,
@@ -475,7 +476,7 @@ const PaymentPage = () => {
 
           <div style={{ display: "flex", gap: "20px" }}>
             <div className="form-group" style={{ flex: 1 }}>
-              <label className="form-label">БИК (необязательно)</label>
+              <label className="form-label">БИК </label>
               <input
                 type="text"
                 name="bik"
@@ -486,7 +487,7 @@ const PaymentPage = () => {
               />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
-              <label className="form-label">Номер счета (необязательно)</label>
+              <label className="form-label">Номер счета </label>
               <input
                 type="text"
                 name="accountNumber"
@@ -499,7 +500,7 @@ const PaymentPage = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Название банка (необязательно)</label>
+            <label className="form-label">Название банка </label>
             <input
               type="text"
               name="bankName"
@@ -653,8 +654,8 @@ const PaymentPage = () => {
                   {loading
                     ? "Создание платежа..."
                     : userType === "LEGAL_ENTITY"
-                      ? "Оплатить"
-                      : "Создать платеж"}
+                    ? "Оплатить"
+                    : "Создать платеж"}
                 </button>
               </div>
             </form>
